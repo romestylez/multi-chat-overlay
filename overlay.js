@@ -135,7 +135,7 @@ function escapeHtml(str) {
 }
 
 // ===== Nachricht anzeigen =====
-function addMessage(user, text, platform, twitchEmotes = null, nameColor = "#fff") {
+function addMessage(user, text, platform, twitchEmotes = null, nameColor = "#fff", badgesHtml = "") {
   const el = document.createElement("div");
   el.className = "message";
   let icon = platform === "Twitch" ? "twitch.png" : "kick.png";
@@ -149,6 +149,7 @@ function addMessage(user, text, platform, twitchEmotes = null, nameColor = "#fff
 
   el.innerHTML = `
     <img src="img/${icon}" style="height:18px;margin-right:4px;vertical-align:middle">
+    ${CONFIG.SHOW_BADGES ? badgesHtml : ""}
     <span style="font-weight:bold;margin:0 6px;color:${nameColor}">${escapeHtml(user)}:</span>
     ${renderedText}
   `;
@@ -192,7 +193,21 @@ function connectTwitch() {
             twitchEmotes[id] = positions.split(",");
           });
         }
-        addMessage(user, text, "Twitch", twitchEmotes, tags["color"] || "#fff");
+
+        // Twitch-Badges
+        let badgesHtml = "";
+        if (CONFIG.SHOW_BADGES && tags["badges"]) {
+          tags["badges"].split(",").forEach(b => {
+            const [type] = b.split("/");
+            if (type === "moderator") {
+              badgesHtml += `<img class="badge" src="img/twitch_mod.png" alt="mod" style="height:18px;vertical-align:middle;margin-right:4px">`;
+            } else if (type === "vip") {
+              badgesHtml += `<img class="badge" src="img/twitch_vip.png" alt="vip" style="height:18px;vertical-align:middle;margin-right:4px">`;
+            }
+          });
+        }
+
+        addMessage(user, text, "Twitch", twitchEmotes, tags["color"] || "#fff", badgesHtml);
       }
     }
   };
@@ -227,7 +242,20 @@ function connectKick() {
           return `<img class="emote" src="${url}" alt="${name}">`;
         });
 
-        addMessage(user, text, "Kick", null, color);
+        // Kick-Badges
+        let badgesHtml = "";
+        if (CONFIG.SHOW_BADGES) {
+          (inner.sender.identity?.badges || []).forEach(b => {
+            if (b.type === "moderator") {
+              badgesHtml += `<img class="badge" src="img/kick_mod.svg" alt="mod" style="height:18px;vertical-align:middle;margin-right:4px">`;
+            } else if (b.type === "vip") {
+              // Placeholder bis kick_vip.svg/png vorhanden ist
+              badgesHtml += `<img class="badge" src="img/kick_vip.png" alt="vip" style="height:18px;vertical-align:middle;margin-right:4px">`;
+            }
+          });
+        }
+
+        addMessage(user, text, "Kick", null, color, badgesHtml);
       }
     } catch (e) {
       console.error("[Kick] Parse-Fehler:", e, evt.data);
