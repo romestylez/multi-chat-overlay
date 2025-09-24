@@ -58,7 +58,6 @@ The overlay runs completely locally in OBS as a **Browser Source** – no extern
 
 ### 7TV
 - `SEVENTV_USER_ID` → your user ID from [https://7tv.app](https://7tv.app)  
-  (found in the profile JSON)
 
 ### BTTV
 - `BTTV_TWITCH_USER_ID` → your Twitch user ID  
