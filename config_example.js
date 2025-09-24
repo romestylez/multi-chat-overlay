@@ -13,5 +13,9 @@ const CONFIG = {
   SEVENTV_USER_ID: "YOUR_ID",
 
   // BTTV
-  BTTV_TWITCH_USER_ID: "YOUR_ID"
+  BTTV_TWITCH_USER_ID: "YOUR_ID",
+
+  // Show/hide Mod/Vip badges
+  SHOW_BADGES: true
 };
+
