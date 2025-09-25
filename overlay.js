@@ -138,7 +138,7 @@ function escapeHtml(str) {
 function addMessage(user, text, platform, twitchEmotes = null, nameColor = "#fff", badgesHtml = "") {
   const el = document.createElement("div");
   el.className = "message";
-  let icon = platform === "Twitch" ? "twitch.png" : "kick.png";
+  let icon = platform === "Twitch" ? "twitch_icon.png" : "kick_icon.png";
 
   let renderedText;
   if (platform === "Twitch") {
