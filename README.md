@@ -65,6 +65,10 @@ The overlay runs completely locally in OBS as a **Browser Source** – no extern
 - `BTTV_TWITCH_USER_ID` → your Twitch user ID  
   (e.g. via: [https://streamscharts.com/tools/convert-username](https://streamscharts.com/tools/convert-username))
 
+### FrankerFaceZ (FFZ)
+- `FFZ_CHANNEL` → your Twitch channel name (same as `TWITCH_CHANNEL`)  
+  Used to load your channel-specific FrankerFaceZ emotes.
+
 ### User Blacklist
 - `BLOCKED_USERS` → an array of usernames to ignore (case-insensitive).  
   Example:
