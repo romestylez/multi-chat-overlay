@@ -78,6 +78,58 @@ async function loadBTTVChannel(twitchUserId) {
   }
 }
 
+// ===== FFZ laden =====
+function normalizeFfzUrl(url) {
+  // FFZ liefert manchmal //cdn..., manchmal https://...
+  return url.startsWith("//") ? `https:${url}` : url;
+}
+
+async function loadFFZChannel(channelName) {
+  try {
+    const res = await fetch(`https://api.frankerfacez.com/v1/room/${channelName}`);
+    const data = await res.json();
+    if (data.sets) {
+      let count = 0;
+      for (const set of Object.values(data.sets)) {
+        set.emoticons.forEach(e => {
+          const urls = e.urls || {};
+          const url = urls["4"] || urls["2"] || urls["1"];
+          if (url) {
+            emoteMap[e.name] = normalizeFfzUrl(url);
+            count++;
+          }
+        });
+      }
+      console.log(`[FFZ] Channel-Emotes geladen: ${count}`);
+    }
+  } catch (err) {
+    console.warn("[FFZ] Fehler Channel:", err);
+  }
+}
+
+async function loadFFZGlobal() {
+  try {
+    const res = await fetch("https://api.frankerfacez.com/v1/set/global");
+    const data = await res.json();
+    if (data.sets) {
+      let count = 0;
+      for (const set of Object.values(data.sets)) {
+        set.emoticons.forEach(e => {
+          const urls = e.urls || {};
+          const url = urls["4"] || urls["2"] || urls["1"];
+          if (url) {
+            emoteMap[e.name] = normalizeFfzUrl(url);
+            count++;
+          }
+        });
+      }
+      console.log(`[FFZ] Globale Emotes geladen: ${count}`);
+    }
+  } catch (err) {
+    console.warn("[FFZ] Fehler Global:", err);
+  }
+}
+
 // ===== Text/Emotes =====
 function renderTextWithTwitch(text, twitchEmotes) {
   if (!text) return "";
@@ -275,6 +327,8 @@ function connectKick() {
   await load7TVGlobal();
   await loadBTTVGlobal();
   await loadBTTVChannel(BTTV_TWITCH_USER_ID);
+  await loadFFZGlobal();
+  await loadFFZChannel(CONFIG.FFZ_CHANNEL);
   connectTwitch();
   connectKick();
 })();
