@@ -80,7 +80,6 @@ async function loadBTTVChannel(twitchUserId) {
 
 // ===== FFZ laden =====
 function normalizeFfzUrl(url) {
-  // FFZ liefert manchmal //cdn..., manchmal https://...
   return url.startsWith("//") ? `https:${url}` : url;
 }
 
@@ -165,10 +164,7 @@ function renderTextWithTwitch(text, twitchEmotes) {
 
 function renderText7TV_BTTV(text) {
   if (!text) return "";
-
-  // nur an Leerzeichen trennen → Mentions und Umlaute bleiben intakt
   const parts = text.split(/\s+/);
-
   return parts.map(part => {
     if (emoteMap.hasOwnProperty(part)) {
       return `<img class="emote" src="${emoteMap[part]}" alt="${part}">`;
@@ -192,6 +188,12 @@ function escapeHtml(str) {
 
 // ===== Nachricht anzeigen =====
 function addMessage(user, text, platform, twitchEmotes = null, nameColor = "#fff", badgesHtml = "") {
+  // --- Filter: blockierte User überspringen ---
+  if (CONFIG.BLOCKED_USERS && CONFIG.BLOCKED_USERS.map(u => u.toLowerCase()).includes(user.toLowerCase())) {
+    return; // nichts anzeigen
+  }
+  // --------------------------------------------
+
   const el = document.createElement("div");
   el.className = "message";
   let icon = platform === "Twitch" ? "twitch_icon.png" : "kick_icon.png";
@@ -292,7 +294,7 @@ function connectKick() {
         let text = inner.content || "";
         const color = inner.sender?.identity?.color || "#fff";
 
-        // Kick-Emotes: [emote:ID:NAME] ersetzen
+        // Kick-Emotes
         text = text.replace(/\[emote:(\d+):([^\]]+)\]/g, (m, id, name) => {
           const url = `https://files.kick.com/emotes/${id}/fullsize`;
           return `<img class="emote" src="${url}" alt="${name}">`;
