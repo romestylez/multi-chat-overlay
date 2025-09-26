@@ -1,13 +1,13 @@
-# Chat Overlay (Twitch + Kick + 7TV + BTTV)
+# Chat Overlay (Twitch + Kick + 7TV + BetterTTV + FrankerFaceZ)
 
-A simple overlay for OBS that displays **Twitch chat** and **Kick chat** simultaneously, including **7TV** and **BTTV** emotes.  
+A simple overlay for OBS that displays **Twitch chat** and **Kick chat** simultaneously, including **7TV**, **BetterTTV** and **FrankerFaceZ** emotes.  
 The overlay runs completely locally in OBS as a **Browser Source** – no external service required.
 
 ---
 
 ## 🚀 Features
 - Display Twitch and Kick chat
-- Support for Twitch emotes, 7TV emotes, and BTTV emotes
+- Support for Twitch emotes, 7TV emotes, BetterTTV emotes and FrankerFaceZ emotes
 - Unified layout with CSS (font, size, emote alignment)
 
 ---
