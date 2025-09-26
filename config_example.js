@@ -5,8 +5,8 @@ const CONFIG = {
   TWITCH_OAUTH: "oauth:YOUR_TWITCH_OAUTH_TOKEN", // Token from https://twitchapps.com/tmi/
 
   // Kick
-  KICK_APP_KEY: "YOUR_KICK_APP_KEY",
-  KICK_CLUSTER: "YOUR_KICK_CLUSTER",   // e.g. "us2"
+  KICK_APP_KEY: "32cbd69e4b950bf97679",
+  KICK_CLUSTER: "us2",   // e.g. "us2"
   KICK_CHATROOM_ID: 123456,            // your chatroom ID
 
   // 7TV
@@ -21,3 +21,4 @@ const CONFIG = {
   // Show Twitch/Kick badges or not
   SHOW_BADGES: true
 };
+
