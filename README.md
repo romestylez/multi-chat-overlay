@@ -9,6 +9,7 @@ The overlay runs completely locally in OBS as a **Browser Source** – no extern
 - Display Twitch and Kick chat
 - Support for Twitch emotes, 7TV emotes, BetterTTV emotes and FrankerFaceZ emotes
 - Unified layout with CSS (font, size, emote alignment)
+- **Blacklist support**: ignore messages from specific users (e.g. bots)
 
 ---
 
@@ -30,6 +31,7 @@ The overlay runs completely locally in OBS as a **Browser Source** – no extern
    - **Kick App Key + Chatroom ID**
    - **7TV user ID**
    - **BTTV Twitch user ID**
+   - *(optional)* **Blocked users list**
 
 4. In OBS, add a **Browser Source**:
    - Select the local file: `overlay.html`
@@ -62,6 +64,14 @@ The overlay runs completely locally in OBS as a **Browser Source** – no extern
 ### BTTV
 - `BTTV_TWITCH_USER_ID` → your Twitch user ID  
   (e.g. via: [https://streamscharts.com/tools/convert-username](https://streamscharts.com/tools/convert-username))
+
+### User Blacklist
+- `BLOCKED_USERS` → an array of usernames to ignore (case-insensitive).  
+  Example:
+  ```js
+  BLOCKED_USERS: ["nightbot", "streamelements", "moobot"]
+  ```
+  Messages from these users will not appear in the overlay.
 
 ---
 
