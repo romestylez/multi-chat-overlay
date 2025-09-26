@@ -19,6 +19,10 @@ const CONFIG = {
   FFZ_CHANNEL: "YOUR_FFZ_CHANNEL",     // usually same as Twitch channel
 
   // Show Twitch/Kick badges or not
-  SHOW_BADGES: true
+  SHOW_BADGES: true,
+
+  // Blacklist: users whose messages should be ignored
+  BLOCKED_USERS: ["nightbot", "streamelements", "moobot"]
 };
+
 
