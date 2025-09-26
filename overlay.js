@@ -112,12 +112,16 @@ function renderTextWithTwitch(text, twitchEmotes) {
 }
 
 function renderText7TV_BTTV(text) {
-  const tokens = text.match(/(\w+|[^\w\s]+)/g) || [];
-  return tokens.map(tok => {
-    if (emoteMap.hasOwnProperty(tok)) {
-      return `<img class="emote" src="${emoteMap[tok]}" alt="${tok}">`;
+  if (!text) return "";
+
+  // nur an Leerzeichen trennen → Mentions und Umlaute bleiben intakt
+  const parts = text.split(/\s+/);
+
+  return parts.map(part => {
+    if (emoteMap.hasOwnProperty(part)) {
+      return `<img class="emote" src="${emoteMap[part]}" alt="${part}">`;
     }
-    return escapeHtml(tok);
+    return escapeHtml(part);
   }).join(" ");
 }
 
@@ -249,7 +253,6 @@ function connectKick() {
             if (b.type === "moderator") {
               badgesHtml += `<img class="badge" src="img/kick_mod.svg" alt="mod" style="height:18px;vertical-align:middle;margin-right:4px">`;
             } else if (b.type === "vip") {
-              // Placeholder bis kick_vip.svg/png vorhanden ist
               badgesHtml += `<img class="badge" src="img/kick_vip.png" alt="vip" style="height:18px;vertical-align:middle;margin-right:4px">`;
             }
           });
