@@ -186,13 +186,22 @@ function escapeHtml(str) {
   );
 }
 
-// ===== Nachricht anzeigen =====
 function addMessage(user, text, platform, twitchEmotes = null, nameColor = "#fff", badgesHtml = "") {
-  // --- Filter: blockierte User überspringen ---
+  // --- Filter: blockierte User ---
   if (CONFIG.BLOCKED_USERS && CONFIG.BLOCKED_USERS.map(u => u.toLowerCase()).includes(user.toLowerCase())) {
-    return; // nichts anzeigen
+    return;
   }
-  // --------------------------------------------
+
+  // --- Filter: blockierte Commands ---
+  if (CONFIG.BLOCKED_COMMANDS && text) {
+    const lowered = text.toLowerCase().trim();
+    for (const cmd of CONFIG.BLOCKED_COMMANDS) {
+      if (lowered.startsWith(cmd.toLowerCase())) {
+        return; // Nachricht nicht anzeigen
+      }
+    }
+  }
+  // ---------------------------------------
 
   const el = document.createElement("div");
   el.className = "message";
@@ -218,6 +227,7 @@ function addMessage(user, text, platform, twitchEmotes = null, nameColor = "#fff
     chatBox.removeChild(chatBox.firstChild);
   }
 }
+
 
 // ===== Twitch verbinden =====
 function connectTwitch() {
