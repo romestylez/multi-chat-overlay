@@ -2,7 +2,7 @@
 const CONFIG = {
   // Twitch
   TWITCH_CHANNEL: "example_channel",
-  TWITCH_OAUTH: "oauth:xxxxxxxxxxxxxxxxxxxxxxxxxxxx", // Token from https://twitchapps.com/tmi/
+  TWITCH_OAUTH: "oauth:xxxxxxxxxxxxxxxxxxxxxxxxxxxx", // Token from https://antiscuff.com/oauth/
 
   // Kick
   KICK_APP_KEY: "xxxxxxxxxxxxxxxxxxxx",

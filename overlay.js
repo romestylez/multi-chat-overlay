@@ -192,15 +192,23 @@ function addMessage(user, text, platform, twitchEmotes = null, nameColor = "#fff
     return;
   }
 
-  // --- Filter: blockierte Commands ---
-  if (CONFIG.BLOCKED_COMMANDS && text) {
-    const lowered = text.toLowerCase().trim();
-    for (const cmd of CONFIG.BLOCKED_COMMANDS) {
-      if (lowered.startsWith(cmd.toLowerCase())) {
-        return; // Nachricht nicht anzeigen
-      }
+
+  // --- Filter: Commands blockieren ---
+// 1) Alle Nachrichten blocken, die mit "!" beginnen (optional)
+if (CONFIG.BLOCK_ALL_PREFIX_COMMANDS && text && text.trim().startsWith("!")) {
+  return;
+}
+
+// 2) Einzelne Commands blockieren (falls Prefix-Block NICHT aktiv oder zusätzlich gewollt)
+if (CONFIG.BLOCKED_COMMANDS && text) {
+  const lowered = text.toLowerCase().trim();
+  for (const cmd of CONFIG.BLOCKED_COMMANDS) {
+    if (lowered.startsWith(cmd.toLowerCase())) {
+      return;
     }
   }
+}
+
   // ---------------------------------------
 
   const el = document.createElement("div");
