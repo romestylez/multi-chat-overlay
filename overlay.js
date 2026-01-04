@@ -192,22 +192,26 @@ function addMessage(user, text, platform, twitchEmotes = null, nameColor = "#fff
     return;
   }
 
-
   // --- Filter: Commands blockieren ---
-// 1) Alle Nachrichten blocken, die mit "!" beginnen (optional)
-if (CONFIG.BLOCK_ALL_PREFIX_COMMANDS && text && text.trim().startsWith("!")) {
-  return;
-}
+  // 1) Alle Nachrichten blocken, die mit "!" beginnen
+  if (CONFIG.BLOCK_ALL_PREFIX_COMMANDS && text && text.trim().startsWith("!")) {
+    return;
+  }
 
-// 2) Einzelne Commands blockieren (falls Prefix-Block NICHT aktiv oder zusätzlich gewollt)
-if (CONFIG.BLOCKED_COMMANDS && text) {
-  const lowered = text.toLowerCase().trim();
-  for (const cmd of CONFIG.BLOCKED_COMMANDS) {
-    if (lowered.startsWith(cmd.toLowerCase())) {
-      return;
+  // 2) Einzelne Commands blockieren
+  if (CONFIG.BLOCKED_COMMANDS && text) {
+    const lowered = text.toLowerCase().trim();
+    for (const cmd of CONFIG.BLOCKED_COMMANDS) {
+      if (lowered.startsWith(cmd.toLowerCase())) {
+        return;
+      }
     }
   }
-}
+
+  // ✅ --- Filter: Links blockieren ---
+  if (CONFIG.BLOCK_LINKS && text && /(https?:\/\/|www\.)/i.test(text)) {
+    return;
+  }
 
   // ---------------------------------------
 
@@ -222,12 +226,12 @@ if (CONFIG.BLOCKED_COMMANDS && text) {
     renderedText = text;
   }
 
-  el.innerHTML = `
-    <img src="img/${icon}" style="height:18px;margin-right:4px;vertical-align:middle">
-    ${CONFIG.SHOW_BADGES ? badgesHtml : ""}
-    <span style="font-weight:bold;margin:0 6px;color:${nameColor}">${escapeHtml(user)}:</span>
-    ${renderedText}
-  `;
+  el.innerHTML =
+  `<img class="platform-icon" src="img/${icon}">
+   ${CONFIG.SHOW_BADGES ? badgesHtml : ""}
+   <span class="username" style="color:${nameColor}">${escapeHtml(user)}:</span>
+   ${renderedText}`;
+
 
   chatBox.appendChild(el);
   chatBox.scrollTop = chatBox.scrollHeight;
@@ -258,6 +262,7 @@ function connectTwitch() {
           tagsRaw.substring(1).split(";").forEach(t => {
             const [k, v] = t.split("="); tags[k] = v ?? "";
           });
+
         }
         const user = tags["display-name"] || msg.split("!")[0].substring(1);
         const text = msg.split("PRIVMSG")[1].split(" :")[1] ?? "";
@@ -271,17 +276,22 @@ function connectTwitch() {
         }
 
         // Twitch-Badges
-        let badgesHtml = "";
-        if (CONFIG.SHOW_BADGES && tags["badges"]) {
-          tags["badges"].split(",").forEach(b => {
-            const [type] = b.split("/");
-            if (type === "moderator") {
-              badgesHtml += `<img class="badge" src="img/twitch_mod.png" alt="mod" style="height:18px;vertical-align:middle;margin-right:4px">`;
-            } else if (type === "vip") {
-              badgesHtml += `<img class="badge" src="img/twitch_vip.png" alt="vip" style="height:18px;vertical-align:middle;margin-right:4px">`;
-            }
-          });
-        }
+let badgesHtml = "";
+if (CONFIG.SHOW_BADGES && tags["badges"]) {
+  tags["badges"].split(",").forEach(b => {
+    const [type] = b.split("/");
+
+    if (type === "lead_moderator") {
+      badgesHtml += `<img class="badge" src="img/twitch_lead_mod.png" alt="lead-mod" style="height:18px;vertical-align:middle;margin-right:4px">`;
+    } 
+    else if (type === "moderator") {
+      badgesHtml += `<img class="badge" src="img/twitch_mod.png" alt="mod" style="height:18px;vertical-align:middle;margin-right:4px">`;
+    } 
+    else if (type === "vip") {
+      badgesHtml += `<img class="badge" src="img/twitch_vip.png" alt="vip" style="height:18px;vertical-align:middle;margin-right:4px">`;
+    }
+  });
+}
 
         addMessage(user, text, "Twitch", twitchEmotes, tags["color"] || "#fff", badgesHtml);
       }

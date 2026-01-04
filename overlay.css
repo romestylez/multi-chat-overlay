@@ -32,3 +32,21 @@ body {
     vertical-align: middle;
     display: inline-block; /* verhindert schiefe Umbrüche */
 }
+
+
+.platform-icon {
+    height: 18px;
+    vertical-align: middle;
+    margin-right: 2px;
+}
+
+.badge {
+    height: 18px;
+    vertical-align: middle;
+    margin-right: 2px;
+}
+
+.username {
+    font-weight: bold;
+    margin-right: 2px;
+}
