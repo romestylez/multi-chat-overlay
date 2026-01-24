@@ -186,7 +186,7 @@ function escapeHtml(str) {
   );
 }
 
-function addMessage(user, text, platform, twitchEmotes = null, nameColor = "#fff", badgesHtml = "") {
+function addMessage(user, text, platform, twitchEmotes = null, nameColor = "#fff", badgesHtml = "", msgId = null) {
   // --- Filter: blockierte User ---
   if (CONFIG.BLOCKED_USERS && CONFIG.BLOCKED_USERS.map(u => u.toLowerCase()).includes(user.toLowerCase())) {
     return;
@@ -218,6 +218,11 @@ function addMessage(user, text, platform, twitchEmotes = null, nameColor = "#fff
   const el = document.createElement("div");
   el.className = "message";
   let icon = platform === "Twitch" ? "twitch_icon.png" : "kick_icon.png";
+if (msgId) {
+  el.dataset.msgId = msgId;
+  el.dataset.user = user.toLowerCase();
+}
+
 
   let renderedText;
   if (platform === "Twitch") {
@@ -251,21 +256,66 @@ function connectTwitch() {
     ws.send(`JOIN #${TWITCH_CHANNEL}`);
     console.log("[Twitch] Verbunden");
   };
-  ws.onmessage = (event) => {
+  
+    ws.onmessage = (event) => {
     const lines = event.data.trim().split("\r\n");
+
     for (const msg of lines) {
-      if (msg.startsWith("PING")) { ws.send("PONG :tmi.twitch.tv"); continue; }
+
+      // PING
+      if (msg.startsWith("PING")) {
+        ws.send("PONG :tmi.twitch.tv");
+        continue;
+      }
+
+      // CLEARMSG (einzelne Nachricht gelöscht)
+      if (msg.includes("CLEARMSG")) {
+        const tagsRaw = msg.startsWith("@") ? msg.split(" ")[0] : "";
+        const tags = {};
+        if (tagsRaw) {
+          tagsRaw.substring(1).split(";").forEach(t => {
+            const [k, v] = t.split("=");
+            tags[k] = v ?? "";
+          });
+        }
+
+        const targetMsgId = tags["target-msg-id"];
+        if (targetMsgId) {
+          const el = document.querySelector(`[data-msg-id="${targetMsgId}"]`);
+          if (el) el.remove();
+        }
+        continue;
+      }
+
+      // CLEARCHAT (Ban / Timeout / /clear)
+      if (msg.includes("CLEARCHAT")) {
+        const parts = msg.split("CLEARCHAT")[1];
+        const username = parts?.split(" :")[1]?.trim();
+
+        if (username) {
+          document.querySelectorAll(`[data-user="${username.toLowerCase()}"]`)
+            .forEach(el => el.remove());
+        } else {
+          chatBox.innerHTML = "";
+        }
+        continue;
+      }
+
+      // PRIVMSG (normale Nachricht)
       if (msg.includes("PRIVMSG")) {
         const tagsRaw = msg.startsWith("@") ? msg.split(" ")[0] : "";
         const tags = {};
         if (tagsRaw) {
           tagsRaw.substring(1).split(";").forEach(t => {
-            const [k, v] = t.split("="); tags[k] = v ?? "";
+            const [k, v] = t.split("=");
+            tags[k] = v ?? "";
           });
-
         }
+
         const user = tags["display-name"] || msg.split("!")[0].substring(1);
         const text = msg.split("PRIVMSG")[1].split(" :")[1] ?? "";
+        const msgId = tags["id"] || null;
+
         let twitchEmotes = null;
         if (tags["emotes"]) {
           twitchEmotes = {};
@@ -275,29 +325,26 @@ function connectTwitch() {
           });
         }
 
-        // Twitch-Badges
-let badgesHtml = "";
-if (CONFIG.SHOW_BADGES && tags["badges"]) {
-  tags["badges"].split(",").forEach(b => {
-    const [type] = b.split("/");
+        let badgesHtml = "";
+        if (CONFIG.SHOW_BADGES && tags["badges"]) {
+          tags["badges"].split(",").forEach(b => {
+            const [type] = b.split("/");
+            if (type === "lead_moderator") {
+              badgesHtml += `<img class="badge" src="img/twitch_lead_mod.png" style="height:18px;margin-right:4px">`;
+            } else if (type === "moderator") {
+              badgesHtml += `<img class="badge" src="img/twitch_mod.png" style="height:18px;margin-right:4px">`;
+            } else if (type === "vip") {
+              badgesHtml += `<img class="badge" src="img/twitch_vip.png" style="height:18px;margin-right:4px">`;
+            }
+          });
+        }
 
-    if (type === "lead_moderator") {
-      badgesHtml += `<img class="badge" src="img/twitch_lead_mod.png" alt="lead-mod" style="height:18px;vertical-align:middle;margin-right:4px">`;
-    } 
-    else if (type === "moderator") {
-      badgesHtml += `<img class="badge" src="img/twitch_mod.png" alt="mod" style="height:18px;vertical-align:middle;margin-right:4px">`;
-    } 
-    else if (type === "vip") {
-      badgesHtml += `<img class="badge" src="img/twitch_vip.png" alt="vip" style="height:18px;vertical-align:middle;margin-right:4px">`;
-    }
-  });
-}
-
-        addMessage(user, text, "Twitch", twitchEmotes, tags["color"] || "#fff", badgesHtml);
+        addMessage(user, text, "Twitch", twitchEmotes, tags["color"] || "#fff", badgesHtml, msgId);
       }
     }
   };
 }
+
 
 // ===== Kick verbinden =====
 function connectKick() {
