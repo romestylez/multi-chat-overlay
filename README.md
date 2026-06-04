@@ -32,6 +32,9 @@ The overlay runs completely locally in OBS as a **Browser Source** – no extern
    - **7TV user ID**
    - **BTTV Twitch user ID**
    - *(optional)* **Blocked users list**
+   - *(optional)* **Blocked links yes/no**
+   - *(optional)* **Block commands yes/no**
+   - *(optional)* **Block badges yes/no**
 
 4. In OBS, add a **Browser Source**:
    - Select the local file: `overlay.html`
