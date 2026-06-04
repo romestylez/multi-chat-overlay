@@ -23,4 +23,11 @@ const CONFIG = {
   
   // Blacklist: users whose messages should be ignored
   BLOCKED_USERS: ["examplebot1", "examplebot2", "examplebot3"]
+  
+  // Blacklist: all commands which start with !
+  BLOCK_ALL_PREFIX_COMMANDS: true,
+  
+  // Blacklist: all links (http, https, www)
+  BLOCK_LINKS: true,
+ 
 };
