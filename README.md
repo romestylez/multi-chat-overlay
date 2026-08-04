@@ -1,4 +1,4 @@
-# Chat Overlay (Twitch + Kick + 7TV + BetterTTV + FrankerFaceZ)
+# Multi Chat Overlay (Twitch + Kick + 7TV + BetterTTV + FrankerFaceZ)
 
 A simple overlay for OBS that displays **Twitch chat** and **Kick chat** simultaneously, including **7TV**, **BetterTTV** and **FrankerFaceZ** emotes.  
 The overlay runs completely locally in OBS as a **Browser Source** – no external service required.
@@ -16,13 +16,22 @@ The overlay runs completely locally in OBS as a **Browser Source** – no extern
 ## 📦 Installation
 1. Clone or download the repository:
    ```bash
-   git clone https://github.com/YOURNAME/chat-overlay.git
-   cd chat-overlay
+   git clone https://github.com/romestylez/multi-chat-overlay.git
+   cd multi-chat-overlay
    ```
 
 2. Copy the example config:
+
+   Windows (PowerShell):
+
+   ```powershell
+   Copy-Item config_example.js config.js
+   ```
+
+   macOS/Linux:
+
    ```bash
-   cp config.js.example config.js
+   cp config_example.js config.js
    ```
 
 3. Enter your own values in `config.js`:
@@ -31,13 +40,15 @@ The overlay runs completely locally in OBS as a **Browser Source** – no extern
    - **Kick App Key + Chatroom ID**
    - **7TV user ID**
    - **BTTV Twitch user ID**
+   - **Maximum number of visible messages**
    - *(optional)* **Blocked users list**
-   - *(optional)* **Blocked links yes/no**
-   - *(optional)* **Block commands yes/no**
-   - *(optional)* **Block badges yes/no**
+   - *(optional)* **Blocked individual commands**
+   - *(optional)* **Block all prefixed commands yes/no**
+   - *(optional)* **Block links yes/no**
+   - *(optional)* **Show badges yes/no**
 
 4. In OBS, add a **Browser Source**:
-   - Select the local file: `overlay.html`
+   - Enable **Local file** and select `index.html`
    - Set the size, e.g., `800x600` or whatever fits your layout
 
 ---
@@ -72,13 +83,26 @@ The overlay runs completely locally in OBS as a **Browser Source** – no extern
 - `FFZ_CHANNEL` → your Twitch channel name (same as `TWITCH_CHANNEL`)  
   Used to load your channel-specific FrankerFaceZ emotes.
 
-### User Blacklist
+### Display
+- `MAX_MESSAGES` → maximum number of messages visible at once.
+- `SHOW_BADGES` → show or hide Twitch and Kick badges.
+
+### Filters
 - `BLOCKED_USERS` → an array of usernames to ignore (case-insensitive).  
   Example:
   ```js
   BLOCKED_USERS: ["nightbot", "streamelements", "moobot"]
   ```
   Messages from these users will not appear in the overlay.
+- `BLOCK_ALL_PREFIX_COMMANDS` → ignore every message starting with `!`.
+- `BLOCKED_COMMANDS` → ignore selected commands. Include the prefix in each entry.
+  Example:
+  ```js
+  BLOCKED_COMMANDS: ["!discord", "!socials"]
+  ```
+- `BLOCK_LINKS` → ignore messages containing `http://`, `https://` or `www.`.
+
+> `MAX_MESSAGES` is part of the configuration schema prepared for the upcoming configuration editor. The current overlay still uses its built-in value of `20` until the overlay integration is implemented.
 
 ---
 

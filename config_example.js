@@ -1,5 +1,5 @@
 // Example configuration for Chat Overlay
-const CONFIG = {
+window.CONFIG = {
   // Twitch
   TWITCH_CHANNEL: "example_channel",
   TWITCH_OAUTH: "oauth:xxxxxxxxxxxxxxxxxxxxxxxxxxxx", // Token from https://antiscuff.com/oauth/
@@ -14,20 +14,25 @@ const CONFIG = {
 
   // BTTV
   BTTV_TWITCH_USER_ID: "XXXXXXXX",
-  
+
   // FFZ
   FFZ_CHANNEL: "example_channel",
-  
+
+  // Maximum number of messages visible at once
+  MAX_MESSAGES: 20,
+
   // Show badges or not
   SHOW_BADGES: true,
-  
+
   // Blacklist: users whose messages should be ignored
-  BLOCKED_USERS: ["examplebot1", "examplebot2", "examplebot3"]
-  
+  BLOCKED_USERS: ["examplebot1", "examplebot2", "examplebot3"],
+
   // Blacklist: all commands which start with !
   BLOCK_ALL_PREFIX_COMMANDS: true,
-  
+
+  // Blacklist: individual commands (including their prefix)
+  BLOCKED_COMMANDS: ["!examplecommand", "!anothercommand"],
+
   // Blacklist: all links (http, https, www)
-  BLOCK_LINKS: true,
- 
+  BLOCK_LINKS: true
 };
