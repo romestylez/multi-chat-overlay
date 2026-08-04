@@ -1,4 +1,4 @@
-// ==== KONFIGURATION ==== (aus config.js laden)
+// ==== KONFIGURATION ==== (aus dem URL-Fragment laden)
 const OVERLAY_CONFIG = typeof CONFIG !== "undefined" ? CONFIG : {};
 
 const TWITCH_CHANNEL       = OVERLAY_CONFIG.TWITCH_CHANNEL || "";

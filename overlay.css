@@ -25,6 +25,21 @@ body {
     margin: 2px 0;
 }
 
+.message.text-shadow-enabled {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.92), 0 0 2px rgba(0, 0, 0, 0.8);
+}
+
+.overlay-error {
+    max-width: 680px;
+    margin: 18px;
+    padding: 12px 14px;
+    border: 1px solid rgba(255, 123, 138, 0.52);
+    border-radius: 10px;
+    color: #ffd8dd;
+    background: rgba(38, 9, 15, 0.86);
+    font: 600 14px/1.45 Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
 .emote {
     max-width: 75px;
     max-height: 25px;

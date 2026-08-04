@@ -19,6 +19,11 @@ window.CONFIG = {
   // Maximum number of messages visible at once
   MAX_MESSAGES: 20,
 
+  // Platform-specific message colors and optional readability shadow
+  TWITCH_MESSAGE_COLOR: "#FFFFFF",
+  KICK_MESSAGE_COLOR: "#FFFFFF",
+  ENABLE_TEXT_SHADOW: false,
+
   // Hide all badges, only subscriber/founder badges, or platform icons
   HIDE_BADGES: false,
   HIDE_SUB_BADGES: false,

@@ -14,8 +14,8 @@
         <p class="eyebrow">Multi Chat Overlay</p>
         <h1>Overlay konfigurieren</h1>
         <p class="hero-copy">
-          Twitch- und Kick-Chat einrichten, Filter festlegen und anschließend eine lokale
-          <code>config.js</code> speichern. Die erzeugte Datei bleibt auf deinem Rechner.
+          Twitch- und Kick-Chat einrichten und einen fertigen OBS-Link erzeugen.
+          Die Einstellungen werden ausschließlich im Link gespeichert.
         </p>
       </div>
       <div class="hero-meta">
@@ -228,14 +228,53 @@
             <p id="save-hint" class="save-hint"></p>
           </div>
           <div class="action-buttons">
-            <button id="download-config" class="button button-secondary" type="button">config.js herunterladen</button>
-            <button class="button button-primary" type="submit">config.js speichern</button>
+            <button id="import-config" class="button button-secondary" type="button">Konfiguration importieren</button>
+            <button class="button button-primary" type="submit">Overlay-Link erzeugen</button>
           </div>
         </div>
       </form>
     </main>
   </div>
 
+  <dialog id="import-dialog" class="editor-dialog" aria-labelledby="import-dialog-title">
+    <form method="dialog">
+      <div class="dialog-heading">
+        <p class="section-kicker">Bestehende Einstellungen</p>
+        <h2 id="import-dialog-title">Konfiguration importieren</h2>
+      </div>
+      <label class="field">
+        <span>OBS-Overlay-Link</span>
+        <textarea id="import-url" rows="4" spellcheck="false" placeholder="https://multichat.romestylez.dev/chat#c=..."></textarea>
+        <small>Der Link wird ausschließlich in diesem Browser ausgewertet und nicht an einen Server gesendet.</small>
+      </label>
+      <p id="import-status" class="dialog-status" role="status" aria-live="polite"></p>
+      <div class="dialog-actions">
+        <button class="button button-quiet" value="cancel">Abbrechen</button>
+        <button id="confirm-import" class="button button-primary" type="button">Importieren</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="link-dialog" class="editor-dialog" aria-labelledby="link-dialog-title">
+    <form method="dialog">
+      <div class="dialog-heading">
+        <p class="section-kicker">OBS-Browserquelle</p>
+        <h2 id="link-dialog-title">Dein Overlay-Link ist bereit</h2>
+      </div>
+      <label class="field">
+        <span>Overlay-Link</span>
+        <textarea id="generated-overlay-url" rows="5" readonly spellcheck="false"></textarea>
+        <small>Ersetze nach jeder Änderung den bisherigen Link in deiner OBS-Browserquelle.</small>
+      </label>
+      <p id="copy-status" class="dialog-status" role="status" aria-live="polite"></p>
+      <div class="dialog-actions">
+        <button class="button button-quiet" value="cancel">Schließen</button>
+        <button id="copy-overlay-url" class="button button-primary" type="button">Overlay-Link kopieren</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="config-codec.js"></script>
   <script src="config-editor.js"></script>
 </body>
 </html>

@@ -1,0 +1,11 @@
+Options -Indexes
+DirectoryIndex config.html
+
+<Files "config.js">
+  Require all denied
+</Files>
+
+RewriteEngine On
+RewriteRule ^(config|chat)/$ $1 [R=302,L]
+RewriteRule ^config$ config.html [L]
+RewriteRule ^chat$ chat.html [L]

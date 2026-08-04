@@ -20,6 +20,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 html {
   min-width: 320px;
   background: var(--bg);
@@ -516,6 +520,59 @@ textarea:disabled {
   gap: 9px;
 }
 
+.editor-dialog {
+  width: min(620px, calc(100% - 32px));
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 20px;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 8% 0, rgba(139, 92, 246, 0.16), transparent 22rem),
+    #11141b;
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.65);
+}
+
+.editor-dialog::backdrop {
+  background: rgba(2, 4, 8, 0.76);
+  backdrop-filter: blur(7px);
+}
+
+.editor-dialog form {
+  padding: 26px;
+}
+
+.dialog-heading {
+  margin-bottom: 22px;
+}
+
+.dialog-status {
+  min-height: 22px;
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 18px;
+}
+
+#generated-overlay-url,
+#import-url {
+  overflow-wrap: anywhere;
+  font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+  font-size: 0.78rem;
+}
+
+#generated-overlay-url[readonly] {
+  cursor: text;
+  color: #ded7f8;
+  background: rgba(3, 5, 9, 0.74);
+}
+
 @media (max-width: 820px) {
   .page-shell {
     width: min(100% - 24px, 680px);
@@ -549,6 +606,10 @@ textarea:disabled {
     grid-template-columns: 1fr 1fr;
   }
 
+  .dialog-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 @media (max-width: 540px) {
@@ -562,7 +623,8 @@ textarea:disabled {
   }
 
   .input-action-row,
-  .action-buttons {
+  .action-buttons,
+  .dialog-actions {
     grid-template-columns: 1fr;
   }
 

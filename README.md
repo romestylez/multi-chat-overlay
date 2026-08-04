@@ -1,8 +1,8 @@
 # Multi Chat Overlay
 
-A local OBS browser-source overlay that combines Twitch and Kick chat in one view. It supports native platform emotes, 7TV, BetterTTV, FrankerFaceZ, moderation filters, role badges and channel-specific Twitch subscriber badges.
+A local and optionally hosted OBS browser-source overlay that combines Twitch and Kick chat in one view. It supports native platform emotes, 7TV, BetterTTV, FrankerFaceZ, moderation filters, role badges and channel-specific Twitch subscriber badges.
 
-The overlay and its graphical configuration editor run locally. No web server, hosted configuration service, account or `localStorage` is required. The generated `config.js` remains the single source of truth.
+The local variant uses `config.js`. The hosted variant stores the complete configuration inside the generated OBS URL. Neither variant requires an account, a project-owned configuration API, a database or `localStorage`.
 
 ## Features
 
@@ -26,6 +26,8 @@ The overlay and its graphical configuration editor run locally. No web server, h
 - The global badge selected by each Twitch user
 - Supported Kick moderator and VIP badges
 - Independent switches for platform icons, all badges, subscriber badges and global badges
+- Separate Twitch and Kick message colors with color pickers and editable hex values
+- Optional text shadow for improved readability
 
 ### Configuration and moderation
 
@@ -33,11 +35,32 @@ The overlay and its graphical configuration editor run locally. No web server, h
 - Load an existing adjacent `config.js`
 - Save through the File System Access API where supported
 - Download fallback for other browsers
+- Static online editor that generates a ready-to-use OBS URL
+- Import an existing online overlay URL for further editing
+- Keep hosted settings exclusively inside the URL fragment
 - Configurable message limit
 - Block users, commands and links
 - Disable individual command entry while all `!` commands are blocked
 
-## Quick start
+## Online quick start
+
+1. Open the hosted editor:
+
+   ```text
+   https://multichat.romestylez.dev/config
+   ```
+
+2. Configure Twitch, Kick, emotes, appearance and filters.
+
+3. Click **Overlay-Link erzeugen** and copy the generated URL.
+
+4. Add an OBS **Browser Source**, leave **Local file** disabled and paste the URL.
+
+5. To change an existing configuration, open the editor, click **Konfiguration importieren** and paste the current URL from OBS. Generate a new URL after editing and replace the old URL in OBS.
+
+The hosted editor does not upload or retain the configuration. The generated URL is the configuration. Losing that URL means the settings cannot be recovered by the service.
+
+## Local quick start
 
 1. Clone or download the repository:
 
@@ -69,6 +92,8 @@ The overlay and its graphical configuration editor run locally. No web server, h
 
 ## Configuration editor
 
+### Local mode
+
 The editor automatically loads an existing `config.js` from the same directory. Reloading `config.html` restores the values from that file and displays `config.js geladen` when loading succeeded.
 
 The editor does not store configuration in `localStorage`. This makes `config.js` easy to back up, copy to another computer or edit manually.
@@ -85,6 +110,16 @@ The editor supports:
 - Blocked users, commands and links
 
 When **Alle !-Befehle blockieren** is enabled, the individual blocked-command field is disabled. Existing entries are retained and become editable again after disabling the global command filter.
+
+### Online mode
+
+The standalone `hosted/config.html` operates as the online editor when deployed through HTTP or HTTPS. It does not load or create `config.js`. Instead it converts the visible form values into a compact, versioned JSON payload and stores that payload after `#c=` in the generated overlay URL.
+
+URL fragments are processed only in the browser and are not sent to Apache as part of the HTTP request. The online overlay decodes the fragment, validates every supported setting and then passes the resulting in-memory configuration to the same overlay code used by the local variant.
+
+**Konfiguration importieren** reads an existing overlay URL locally and repopulates the form. Importing never requests the pasted address. Missing newer settings receive their current defaults, while unknown settings are ignored. Invalid values, damaged payloads and oversized filter lists are rejected.
+
+Do not manually add Twitch OAuth values or other secrets to an online URL. URL payloads are encoded for transport, not encrypted.
 
 ## Twitch
 
@@ -151,6 +186,16 @@ For channel-specific emotes, the overlay reads the Twitch channel ID from IRC an
 
 A failed optional emote request does not stop the remaining overlay services or chat connections.
 
+## Message appearance
+
+The actual chat message text can use a different color for each platform. Usernames keep the colors supplied by Twitch or Kick.
+
+- `TWITCH_MESSAGE_COLOR`: Twitch message text color in `#RRGGBB` format
+- `KICK_MESSAGE_COLOR`: Kick message text color in `#RRGGBB` format
+- `ENABLE_TEXT_SHADOW`: add a dark shadow to usernames and message text for improved readability
+
+The editor provides a visual color picker and an editable hex field for each platform. Both inputs stay synchronized. Invalid hex values are rejected when saving the configuration.
+
 ## Configuration reference
 
 | Setting | Description | Default |
@@ -166,6 +211,9 @@ A failed optional emote request does not stop the remaining overlay services or 
 | `ENABLE_BTTV` | Load global and automatically resolved channel-specific BTTV emotes | `true` |
 | `ENABLE_FFZ` | Load global and automatically resolved channel-specific FFZ emotes | `true` |
 | `MAX_MESSAGES` | Maximum messages kept in the overlay | `20` |
+| `TWITCH_MESSAGE_COLOR` | Twitch message text color | `#FFFFFF` |
+| `KICK_MESSAGE_COLOR` | Kick message text color | `#FFFFFF` |
+| `ENABLE_TEXT_SHADOW` | Add a dark readability shadow to chat text | `false` |
 | `HIDE_BADGES` | Hide all supported badges | `false` |
 | `HIDE_SUB_BADGES` | Hide Twitch subscriber and founder badges | `false` |
 | `HIDE_GLOBAL_BADGE` | Hide user-selected global Twitch badges | `false` |
@@ -235,8 +283,23 @@ Open the public Kick channel endpoint manually, find `chatroom.id` and enter tha
 
 ## External services
 
-Although the files run locally, the overlay connects directly to Twitch, Kick and the configured emote/badge APIs to receive chat data and media. No project-owned configuration server is involved.
+The overlay connects directly to Twitch, Kick and the configured emote/badge APIs to receive chat data and media. The hosted variant serves only static project files; no project-owned configuration API or database is involved.
+
+## Self-hosting the online variant
+
+The self-contained `hosted` directory includes an Apache `.htaccess` file with these routes:
+
+```text
+/config  -> config.html
+/chat    -> chat.html
+```
+
+Deploy only the contents of `hosted` into the document root of an Apache site with `mod_rewrite` enabled. `config.html` becomes the default page. Because the hosted variant is static, no PHP runtime, writable directory or database is required.
+
+Self-hosted instances generate links relative to their own origin and deployment path. The directory contains its own HTML, CSS, JavaScript, images and license and does not reference files from the local variant in the repository root. Never add or upload a personal `config.js` to the public directory.
 
 ## License
 
-MIT License – free to use and adapt.
+Licensed under the [GNU Affero General Public License v3.0](LICENSE).
+
+You may use, modify and self-host the project. If you operate a modified version as a network service, its corresponding source code must also be made available to the users of that service under the AGPL-3.0 terms.

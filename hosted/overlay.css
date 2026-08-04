@@ -1,0 +1,71 @@
+body {
+    margin: 0;
+    overflow: hidden;
+    height: 100vh;
+    position: relative;
+    background-color: transparent; /* durchsichtig für OBS */
+}
+
+#chat {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    color: white;
+    word-break: break-word;
+    width: calc(100% - 20px);
+    padding: 10px;
+    position: absolute;
+    bottom: 0;
+    overflow: hidden;
+    background-color: transparent;
+}
+
+.message {
+    line-height: 30px;  /* gleichmäßige Höhe wie im anderen Tool */
+    margin: 2px 0;
+}
+
+.message.text-shadow-enabled {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.92), 0 0 2px rgba(0, 0, 0, 0.8);
+}
+
+.overlay-error {
+    max-width: 680px;
+    margin: 18px;
+    padding: 12px 14px;
+    border: 1px solid rgba(255, 123, 138, 0.52);
+    border-radius: 10px;
+    color: #ffd8dd;
+    background: rgba(38, 9, 15, 0.86);
+    font: 600 14px/1.45 Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.emote {
+    max-width: 75px;
+    max-height: 25px;
+    margin: 0 2px;
+    vertical-align: middle;
+    display: inline-block; /* verhindert schiefe Umbrüche */
+}
+
+
+.platform-icon {
+    height: 18px;
+    vertical-align: middle;
+    margin-right: 2px;
+}
+
+.badge {
+    height: 18px;
+    vertical-align: middle;
+    margin-right: 2px;
+}
+
+.twitch-badge-pending {
+    display: none;
+}
+
+.username {
+    font-weight: bold;
+    margin-right: 2px;
+}
