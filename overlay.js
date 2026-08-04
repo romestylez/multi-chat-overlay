@@ -25,6 +25,23 @@ const TWITCH_MESSAGE_COLOR = configuredColor(OVERLAY_CONFIG.TWITCH_MESSAGE_COLOR
 const KICK_MESSAGE_COLOR   = configuredColor(OVERLAY_CONFIG.KICK_MESSAGE_COLOR, "#ffffff");
 const ENABLE_TEXT_SHADOW   = OVERLAY_CONFIG.ENABLE_TEXT_SHADOW === true;
 
+const FONT_FAMILY_STACKS = Object.freeze({
+  system: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+  arial: "Arial, Helvetica, sans-serif",
+  verdana: "Verdana, Geneva, sans-serif",
+  tahoma: "Tahoma, Geneva, sans-serif",
+  trebuchet: "'Trebuchet MS', Arial, sans-serif",
+  georgia: "Georgia, 'Times New Roman', serif",
+  courier: "'Courier New', Courier, monospace"
+});
+const configuredFontSize = Number(OVERLAY_CONFIG.CHAT_FONT_SIZE);
+const CHAT_FONT_SIZE = Number.isInteger(configuredFontSize) && configuredFontSize >= 12 && configuredFontSize <= 48 ? configuredFontSize : 20;
+const CHAT_FONT_FAMILY = FONT_FAMILY_STACKS[OVERLAY_CONFIG.CHAT_FONT_FAMILY] || FONT_FAMILY_STACKS.system;
+const configuredFontWeight = Number(OVERLAY_CONFIG.CHAT_FONT_WEIGHT);
+const CHAT_FONT_WEIGHT = Number.isInteger(configuredFontWeight) && configuredFontWeight >= 300 && configuredFontWeight <= 900 && configuredFontWeight % 100 === 0
+  ? configuredFontWeight
+  : 800;
+
 // ====== Anzeige ======
 const configuredMaxMessages = Number(OVERLAY_CONFIG.MAX_MESSAGES);
 const MAX_MESSAGES = Number.isInteger(configuredMaxMessages) && configuredMaxMessages > 0
@@ -40,6 +57,9 @@ const HIDE_PLATFORM = OVERLAY_CONFIG.HIDE_PLATFORM === true;
 
 // ==== State ====
 const chatBox = document.getElementById("chat");
+chatBox.style.fontSize = `${CHAT_FONT_SIZE}px`;
+chatBox.style.fontFamily = CHAT_FONT_FAMILY;
+chatBox.style.fontWeight = String(CHAT_FONT_WEIGHT);
 let emoteMap = {};
 let twitchEmoteCache = {};
 let twitchBadgeMap = {};

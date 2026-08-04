@@ -11,6 +11,9 @@
     ENABLE_BTTV: true,
     ENABLE_FFZ: true,
     MAX_MESSAGES: 20,
+    CHAT_FONT_SIZE: 20,
+    CHAT_FONT_FAMILY: "system",
+    CHAT_FONT_WEIGHT: 800,
     TWITCH_MESSAGE_COLOR: "#FFFFFF",
     KICK_MESSAGE_COLOR: "#FFFFFF",
     YOUTUBE_MESSAGE_COLOR: "#FFFFFF",
@@ -43,6 +46,12 @@
     enableBTTV: document.getElementById("enable-bttv"),
     enableFFZ: document.getElementById("enable-ffz"),
     maxMessages: document.getElementById("max-messages"),
+    chatFontSize: document.getElementById("chat-font-size"),
+    chatFontSizeValue: document.getElementById("chat-font-size-value"),
+    chatFontFamily: document.getElementById("chat-font-family"),
+    chatFontWeight: document.getElementById("chat-font-weight"),
+    chatFontWeightValue: document.getElementById("chat-font-weight-value"),
+    chatPreview: document.getElementById("chat-preview"),
     twitchMessageColor: document.getElementById("twitch-message-color"),
     twitchMessageColorHex: document.getElementById("twitch-message-color-hex"),
     kickMessageColor: document.getElementById("kick-message-color"),
@@ -101,6 +110,68 @@
     const color = normalizedHexColor(input.value);
     if (!color) throw new Error(`${label} muss als Hex-Farbe im Format #RRGGBB angegeben werden.`);
     return color;
+  }
+
+  const supportedFontFamilies = new Set(["system", "arial", "verdana", "tahoma", "trebuchet", "georgia", "courier"]);
+  const fontFamilyStacks = {
+    system: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+    arial: "Arial, Helvetica, sans-serif",
+    verdana: "Verdana, Geneva, sans-serif",
+    tahoma: "Tahoma, Geneva, sans-serif",
+    trebuchet: "'Trebuchet MS', Arial, sans-serif",
+    georgia: "Georgia, 'Times New Roman', serif",
+    courier: "'Courier New', Courier, monospace"
+  };
+
+  function fontWeightLabel(value) {
+    return ({
+      300: "Dünn",
+      400: "Normal",
+      500: "Mittel",
+      600: "Halbfett",
+      700: "Fett",
+      800: "Extra fett",
+      900: "Sehr fett"
+    })[value] || "Extra fett";
+  }
+
+  function syncTypographyOutputs() {
+    const fontSize = Number(elements.chatFontSize.value);
+    const fontWeight = Number(elements.chatFontWeight.value);
+    elements.chatFontSizeValue.textContent = `${fontSize} px`;
+    elements.chatFontWeightValue.textContent = `${fontWeightLabel(fontWeight)} (${fontWeight})`;
+  }
+
+  function syncPreview() {
+    const preview = elements.chatPreview;
+    const fontSize = Number(elements.chatFontSize.value);
+    const fontWeight = Number(elements.chatFontWeight.value);
+    preview.style.fontSize = `${fontSize}px`;
+    preview.style.fontFamily = fontFamilyStacks[elements.chatFontFamily.value] || fontFamilyStacks.system;
+    preview.style.fontWeight = String(fontWeight);
+    preview.classList.toggle("text-shadow-enabled", elements.enableTextShadow.checked);
+
+    const platformColors = {
+      twitch: normalizedHexColor(elements.twitchMessageColorHex.value) || elements.twitchMessageColor.value,
+      kick: normalizedHexColor(elements.kickMessageColorHex.value) || elements.kickMessageColor.value,
+      youtube: normalizedHexColor(elements.youtubeMessageColorHex.value) || elements.youtubeMessageColor.value
+    };
+    preview.querySelectorAll("[data-preview-platform]").forEach(message => {
+      const text = message.querySelector(".preview-message-text");
+      if (text) text.style.color = platformColors[message.dataset.previewPlatform] || "#FFFFFF";
+    });
+    preview.querySelectorAll(".preview-platform-icon").forEach(icon => {
+      icon.hidden = elements.hidePlatform.checked;
+    });
+    preview.querySelectorAll(".preview-role-badge").forEach(badge => {
+      badge.hidden = elements.hideBadges.checked;
+    });
+    preview.querySelectorAll(".preview-sub-badge").forEach(badge => {
+      badge.hidden = elements.hideBadges.checked || elements.hideSubBadges.checked;
+    });
+    preview.querySelectorAll(".preview-global-badge").forEach(badge => {
+      badge.hidden = elements.hideBadges.checked || elements.hideGlobalBadge.checked;
+    });
   }
 
   function bindColorInputs(picker, textInput) {
@@ -171,6 +242,14 @@
     elements.enableBTTV.checked = values.ENABLE_BTTV !== false;
     elements.enableFFZ.checked = values.ENABLE_FFZ !== false;
     elements.maxMessages.value = values.MAX_MESSAGES || 20;
+    const chatFontSize = Number(values.CHAT_FONT_SIZE);
+    const chatFontWeight = Number(values.CHAT_FONT_WEIGHT);
+    elements.chatFontSize.value = Number.isInteger(chatFontSize) && chatFontSize >= 12 && chatFontSize <= 48 ? chatFontSize : 20;
+    elements.chatFontFamily.value = supportedFontFamilies.has(values.CHAT_FONT_FAMILY) ? values.CHAT_FONT_FAMILY : "system";
+    elements.chatFontWeight.value = Number.isInteger(chatFontWeight) && chatFontWeight >= 300 && chatFontWeight <= 900 && chatFontWeight % 100 === 0
+      ? chatFontWeight
+      : 800;
+    syncTypographyOutputs();
 
     const twitchMessageColor = normalizedHexColor(values.TWITCH_MESSAGE_COLOR) || "#FFFFFF";
     const kickMessageColor = normalizedHexColor(values.KICK_MESSAGE_COLOR) || "#FFFFFF";
@@ -193,6 +272,7 @@
     elements.blockPrefixCommands.checked = Boolean(values.BLOCK_ALL_PREFIX_COMMANDS);
     elements.blockLinks.checked = Boolean(values.BLOCK_LINKS);
     syncBlockedCommandsAvailability();
+    syncPreview();
 
     if (source === "import") {
       setSaveStatus("Konfiguration wurde aus dem Overlay-Link geladen.", "success");
@@ -280,6 +360,9 @@
     const youtubeChannel = normalizeChannel(elements.youtubeChannel.value, "youtube");
     const kickChatroomId = kickChatroomIdValue;
     const maxMessages = Number(elements.maxMessages.value);
+    const chatFontSize = Number(elements.chatFontSize.value);
+    const chatFontFamily = elements.chatFontFamily.value;
+    const chatFontWeight = Number(elements.chatFontWeight.value);
 
     if (!twitchChannel && !kickChatroomId && !youtubeChannel) {
       throw new Error("Konfiguriere mindestens einen Twitch-, Kick- oder YouTube-Kanal.");
@@ -299,6 +382,15 @@
     if (!Number.isInteger(maxMessages) || maxMessages < 1 || maxMessages > 200) {
       throw new Error("Die maximale Nachrichtenanzahl muss zwischen 1 und 200 liegen.");
     }
+    if (!Number.isInteger(chatFontSize) || chatFontSize < 12 || chatFontSize > 48) {
+      throw new Error("Die Schriftgröße muss zwischen 12 und 48 Pixeln liegen.");
+    }
+    if (!supportedFontFamilies.has(chatFontFamily)) {
+      throw new Error("Die ausgewählte Schriftart ist ungültig.");
+    }
+    if (!Number.isInteger(chatFontWeight) || chatFontWeight < 300 || chatFontWeight > 900 || chatFontWeight % 100 !== 0) {
+      throw new Error("Die Schriftstärke ist ungültig.");
+    }
 
     const config = {
       TWITCH_CHANNEL: twitchChannel,
@@ -309,6 +401,9 @@
       ENABLE_BTTV: elements.enableBTTV.checked,
       ENABLE_FFZ: elements.enableFFZ.checked,
       MAX_MESSAGES: maxMessages,
+      CHAT_FONT_SIZE: chatFontSize,
+      CHAT_FONT_FAMILY: chatFontFamily,
+      CHAT_FONT_WEIGHT: chatFontWeight,
       TWITCH_MESSAGE_COLOR: readHexColor(elements.twitchMessageColorHex, "Die Twitch-Nachrichtenfarbe"),
       KICK_MESSAGE_COLOR: readHexColor(elements.kickMessageColorHex, "Die Kick-Nachrichtenfarbe"),
       YOUTUBE_MESSAGE_COLOR: readHexColor(elements.youtubeMessageColorHex, "Die YouTube-Nachrichtenfarbe"),
@@ -397,6 +492,25 @@
   bindColorInputs(elements.twitchMessageColor, elements.twitchMessageColorHex);
   bindColorInputs(elements.kickMessageColor, elements.kickMessageColorHex);
   bindColorInputs(elements.youtubeMessageColor, elements.youtubeMessageColorHex);
+  elements.chatFontSize.addEventListener("input", () => {
+    syncTypographyOutputs();
+    syncPreview();
+  });
+  elements.chatFontWeight.addEventListener("input", () => {
+    syncTypographyOutputs();
+    syncPreview();
+  });
+  elements.chatFontFamily.addEventListener("change", syncPreview);
+  [
+    elements.twitchMessageColor,
+    elements.twitchMessageColorHex,
+    elements.kickMessageColor,
+    elements.kickMessageColorHex,
+    elements.youtubeMessageColor,
+    elements.youtubeMessageColorHex
+  ].forEach(input => input.addEventListener("input", syncPreview));
+  [elements.enableTextShadow, elements.hideBadges, elements.hideSubBadges, elements.hideGlobalBadge, elements.hidePlatform]
+    .forEach(input => input.addEventListener("change", syncPreview));
   elements.twitchChannel.addEventListener("blur", () => {
     elements.twitchChannel.value = normalizeChannel(elements.twitchChannel.value, "twitch");
   });

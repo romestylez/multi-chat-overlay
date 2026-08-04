@@ -43,7 +43,8 @@ body {
 
 button,
 input,
-textarea {
+textarea,
+select {
   font: inherit;
 }
 
@@ -318,7 +319,8 @@ textarea {
 }
 
 input:focus,
-textarea:focus {
+textarea:focus,
+select:focus {
   border-color: rgba(139, 92, 246, 0.72);
   background: rgba(3, 5, 9, 0.78);
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.13);
@@ -330,12 +332,139 @@ textarea::placeholder {
 }
 
 input:disabled,
-textarea:disabled {
+textarea:disabled,
+select:disabled {
   cursor: not-allowed;
   border-color: rgba(255, 255, 255, 0.06);
   color: #697181;
   background: rgba(3, 5, 9, 0.28);
   opacity: 0.68;
+}
+
+select {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 38px 0 13px;
+}
+
+select option {
+  color: var(--text);
+  background: #101319;
+}
+
+.display-settings-grid {
+  align-items: end;
+}
+
+.display-settings-grid + .field-grid,
+.display-settings-grid + .color-settings {
+  margin-top: 18px;
+}
+
+.field > .range-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.range-label output {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+input[type="range"] {
+  min-height: 46px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+input[type="range"]:focus {
+  background: transparent;
+  box-shadow: none;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.13);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  width: 20px;
+  height: 20px;
+  margin-top: -6.5px;
+  border: 2px solid #e9e1ff;
+  border-radius: 50%;
+  appearance: none;
+  background: var(--accent-strong);
+  box-shadow: 0 3px 12px rgba(116, 68, 232, 0.42);
+}
+
+.chat-preview-wrap {
+  margin-top: 22px;
+}
+
+.preview-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.88rem;
+  font-weight: 760;
+}
+
+.chat-preview {
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  color: #fff;
+  background:
+    linear-gradient(145deg, rgba(21, 25, 34, 0.96), rgba(5, 7, 11, 0.96)),
+    repeating-conic-gradient(rgba(255, 255, 255, 0.04) 0 25%, transparent 0 50%) 0 / 18px 18px;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.preview-message {
+  line-height: 1.5;
+}
+
+.preview-message + .preview-message {
+  margin-top: 2px;
+}
+
+.preview-platform-icon,
+.preview-badge {
+  display: inline-block;
+  height: 0.9em;
+  margin-right: 2px;
+  vertical-align: middle;
+}
+
+.preview-username {
+  margin-right: 2px;
+  font-weight: inherit;
+}
+
+.twitch-preview-name {
+  color: #bda6ff;
+}
+
+.kick-preview-name {
+  color: #53fc18;
+}
+
+.youtube-preview-name {
+  color: #ff5c55;
+}
+
+.chat-preview.text-shadow-enabled {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.92), 0 0 2px rgba(0, 0, 0, 0.8);
 }
 
 .input-action-row {
@@ -370,6 +499,10 @@ textarea:disabled {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
+}
+
+.emote-switch-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .color-field-grid {

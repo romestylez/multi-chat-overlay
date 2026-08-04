@@ -21,7 +21,7 @@ body {
 }
 
 .message {
-    line-height: 30px;  /* gleichmäßige Höhe wie im anderen Tool */
+    line-height: 1.5;
     margin: 2px 0;
 }
 
@@ -42,7 +42,7 @@ body {
 
 .emote {
     max-width: 75px;
-    max-height: 25px;
+    max-height: 1.25em;
     margin: 0 2px;
     vertical-align: middle;
     display: inline-block; /* verhindert schiefe Umbrüche */
@@ -50,13 +50,13 @@ body {
 
 
 .platform-icon {
-    height: 18px;
+    height: 0.9em;
     vertical-align: middle;
     margin-right: 2px;
 }
 
 .badge {
-    height: 18px;
+    height: 0.9em;
     vertical-align: middle;
     margin-right: 2px;
 }
@@ -66,6 +66,6 @@ body {
 }
 
 .username {
-    font-weight: bold;
+    font-weight: inherit;
     margin-right: 2px;
 }

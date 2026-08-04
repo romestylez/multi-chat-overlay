@@ -30,6 +30,8 @@ The local variant uses `config.js`. The hosted variant stores the complete confi
 - YouTube owner, moderator and channel-member badges
 - Independent switches for platform icons, all badges, subscriber/member badges and global badges
 - Separate Twitch, Kick and YouTube message colors with color pickers and editable hex values
+- Adjustable chat font size, font family and font weight
+- Live editor preview for typography, colors, shadows, badges and platform icons
 - Optional text shadow for improved readability
 
 ### Configuration and moderation
@@ -201,8 +203,13 @@ A failed optional emote request does not stop the remaining overlay services or 
 
 ## Message appearance
 
+The editor separates chat typography and colors from the independent **Badges & Icons** card. A live preview shows representative Twitch and Kick messages locally and adds YouTube in the hosted editor. Changes to typography, colors, text shadow, platform icons and badge switches appear immediately in that preview.
+
 The actual chat message text can use a different color for each platform. Usernames keep the colors supplied by Twitch or Kick; YouTube usernames use the platform accent color.
 
+- `CHAT_FONT_SIZE`: chat font size from `12` to `48` pixels
+- `CHAT_FONT_FAMILY`: one of the bundled system-font presets (`system`, `arial`, `verdana`, `tahoma`, `trebuchet`, `georgia`, `courier`)
+- `CHAT_FONT_WEIGHT`: font weight from `300` to `900` in steps of `100`
 - `TWITCH_MESSAGE_COLOR`: Twitch message text color in `#RRGGBB` format
 - `KICK_MESSAGE_COLOR`: Kick message text color in `#RRGGBB` format
 - `YOUTUBE_MESSAGE_COLOR`: YouTube message text color in `#RRGGBB` format (hosted only)
@@ -226,6 +233,9 @@ The editor provides a visual color picker and an editable hex field for each pla
 | `ENABLE_BTTV` | Load global and automatically resolved channel-specific BTTV emotes | `true` |
 | `ENABLE_FFZ` | Load global and automatically resolved channel-specific FFZ emotes | `true` |
 | `MAX_MESSAGES` | Maximum messages kept in the overlay | `20` |
+| `CHAT_FONT_SIZE` | Chat font size in pixels (`12`–`48`) | `20` |
+| `CHAT_FONT_FAMILY` | Safe local system-font preset | `system` |
+| `CHAT_FONT_WEIGHT` | Chat font weight (`300`–`900`) | `800` |
 | `TWITCH_MESSAGE_COLOR` | Twitch message text color | `#FFFFFF` |
 | `KICK_MESSAGE_COLOR` | Kick message text color | `#FFFFFF` |
 | `YOUTUBE_MESSAGE_COLOR` | YouTube message text color (hosted only) | `#FFFFFF` |

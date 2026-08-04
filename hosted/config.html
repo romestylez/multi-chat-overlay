@@ -95,7 +95,7 @@
 
         <div class="section-grid">
 
-          <section class="config-card" aria-labelledby="emotes-heading">
+          <section class="config-card wide-card" aria-labelledby="emotes-heading">
             <div class="card-heading compact-heading">
               <div>
                 <p class="section-kicker">Erweiterungen</p>
@@ -103,6 +103,7 @@
               </div>
             </div>
 
+            <div class="switch-grid emote-switch-grid">
             <label class="switch-row">
               <input id="enable-7tv" type="checkbox">
               <span class="switch" aria-hidden="true"></span>
@@ -127,20 +128,43 @@
                 <small>Lädt globale und kanalbezogene FrankerFaceZ-Emotes automatisch.</small>
               </span>
             </label>
+            </div>
           </section>
 
-          <section class="config-card" aria-labelledby="display-heading">
+          <section class="config-card wide-card" aria-labelledby="display-heading">
             <div class="card-heading compact-heading">
               <div>
                 <p class="section-kicker">Darstellung</p>
-                <h2 id="display-heading">Anzeige</h2>
+                <h2 id="display-heading">Chatdarstellung</h2>
               </div>
             </div>
 
-            <label class="field">
-              <span>Maximale Nachrichten</span>
-              <input id="max-messages" type="number" min="1" max="200" step="1" value="20">
-            </label>
+            <div class="field-grid display-settings-grid">
+              <label class="field">
+                <span>Maximale Nachrichten</span>
+                <input id="max-messages" type="number" min="1" max="200" step="1" value="20">
+              </label>
+              <label class="field">
+                <span>Schriftart</span>
+                <select id="chat-font-family">
+                  <option value="system">Segoe UI / System</option>
+                  <option value="arial">Arial</option>
+                  <option value="verdana">Verdana</option>
+                  <option value="tahoma">Tahoma</option>
+                  <option value="trebuchet">Trebuchet MS</option>
+                  <option value="georgia">Georgia</option>
+                  <option value="courier">Courier New</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="range-label">Schriftgröße <output id="chat-font-size-value" for="chat-font-size">20 px</output></span>
+                <input id="chat-font-size" type="range" min="12" max="48" step="1" value="20">
+              </label>
+              <label class="field">
+                <span class="range-label">Schriftstärke <output id="chat-font-weight-value" for="chat-font-weight">Extra fett (800)</output></span>
+                <input id="chat-font-weight" type="range" min="300" max="900" step="100" value="800">
+              </label>
+            </div>
             <div class="field color-settings">
               <span>Nachrichtenfarbe</span>
               <div class="field-grid color-field-grid">
@@ -175,6 +199,50 @@
                 <small>Verbessert die Lesbarkeit auf hellen oder unruhigen Hintergründen.</small>
               </span>
             </label>
+
+            <div class="chat-preview-wrap">
+              <span class="preview-label">Live-Vorschau</span>
+              <div id="chat-preview" class="chat-preview">
+                <div class="preview-message" data-preview-platform="twitch">
+                  <img class="preview-platform-icon" src="img/twitch_icon.png" alt="Twitch">
+                  <span class="preview-badges">
+                    <img class="preview-badge preview-role-badge" src="https://static-cdn.jtvnw.net/badges/v1/3267646d-33f0-4b17-b3df-f923a41db1d0/1" alt="Moderator">
+                    <img class="preview-badge preview-sub-badge" src="https://static-cdn.jtvnw.net/badges/v1/5d142ef5-d159-47e2-9127-a843a83d043a/1" alt="Subscriber">
+                    <img class="preview-badge preview-global-badge" src="https://static-cdn.jtvnw.net/badges/v1/544b6594-e11e-4230-8d42-d81c84002524/1" alt="Globales Abzeichen">
+                  </span>
+                  <strong class="preview-username twitch-preview-name">romestylez:</strong>
+                  <span class="preview-message-text">Cooles Overlay</span>
+                </div>
+                <div class="preview-message" data-preview-platform="kick">
+                  <img class="preview-platform-icon" src="img/kick_icon.png" alt="Kick">
+                  <span class="preview-badges">
+                    <img class="preview-badge preview-role-badge" src="img/kick_mod.svg" alt="Moderator">
+                  </span>
+                  <strong class="preview-username kick-preview-name">romestylez:</strong>
+                  <span class="preview-message-text">Cooles Overlay</span>
+                </div>
+                <div class="preview-message" data-preview-platform="youtube">
+                  <img class="preview-platform-icon" src="img/youtube_icon.svg" alt="YouTube">
+                  <span class="preview-badges">
+                    <img class="preview-badge preview-role-badge" src="img/youtube_mod.svg" alt="Moderator">
+                    <img class="preview-badge preview-sub-badge" src="img/youtube_member.svg" alt="Kanalmitglied">
+                  </span>
+                  <strong class="preview-username youtube-preview-name">romestylez:</strong>
+                  <span class="preview-message-text">Cooles Overlay</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="config-card wide-card" aria-labelledby="badges-heading">
+            <div class="card-heading compact-heading">
+              <div>
+                <p class="section-kicker">Darstellung</p>
+                <h2 id="badges-heading">Badges &amp; Icons</h2>
+              </div>
+            </div>
+
+            <div class="switch-grid">
             <label class="switch-row">
               <input id="hide-badges" type="checkbox">
               <span class="switch" aria-hidden="true"></span>
@@ -207,6 +275,7 @@
                 <small>Entfernt das Twitch-, Kick- oder YouTube-Icon vor jeder Nachricht.</small>
               </span>
             </label>
+            </div>
           </section>
 
           <section class="config-card wide-card" aria-labelledby="filters-heading">

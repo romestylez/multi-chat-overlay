@@ -15,6 +15,9 @@
     ENABLE_BTTV: true,
     ENABLE_FFZ: true,
     MAX_MESSAGES: 20,
+    CHAT_FONT_SIZE: 20,
+    CHAT_FONT_FAMILY: "system",
+    CHAT_FONT_WEIGHT: 800,
     TWITCH_MESSAGE_COLOR: "#FFFFFF",
     KICK_MESSAGE_COLOR: "#FFFFFF",
     YOUTUBE_MESSAGE_COLOR: "#FFFFFF",
@@ -38,6 +41,9 @@
     ["ENABLE_BTTV", "eb", "boolean"],
     ["ENABLE_FFZ", "ef", "boolean"],
     ["MAX_MESSAGES", "m", "messageCount"],
+    ["CHAT_FONT_SIZE", "fs", "fontSize"],
+    ["CHAT_FONT_FAMILY", "ff", "fontFamily"],
+    ["CHAT_FONT_WEIGHT", "fw", "fontWeight"],
     ["TWITCH_MESSAGE_COLOR", "tc", "color"],
     ["KICK_MESSAGE_COLOR", "kc", "color"],
     ["YOUTUBE_MESSAGE_COLOR", "yc", "color"],
@@ -96,6 +102,27 @@
       const number = Number(value);
       if (Number.isInteger(number) && number >= 1 && number <= 200) return number;
       if (strict) throw new Error("Der Link enthält eine ungültige Nachrichtenanzahl.");
+      return fallback;
+    }
+
+    if (type === "fontSize") {
+      const number = Number(value);
+      if (Number.isInteger(number) && number >= 12 && number <= 48) return number;
+      if (strict) throw new Error("Der Link enthält eine ungültige Schriftgröße.");
+      return fallback;
+    }
+
+    if (type === "fontWeight") {
+      const number = Number(value);
+      if (Number.isInteger(number) && number >= 300 && number <= 900 && number % 100 === 0) return number;
+      if (strict) throw new Error("Der Link enthält eine ungültige Schriftstärke.");
+      return fallback;
+    }
+
+    if (type === "fontFamily") {
+      const supported = ["system", "arial", "verdana", "tahoma", "trebuchet", "georgia", "courier"];
+      if (typeof value === "string" && supported.includes(value)) return value;
+      if (strict) throw new Error("Der Link enthält eine ungültige Schriftart.");
       return fallback;
     }
 

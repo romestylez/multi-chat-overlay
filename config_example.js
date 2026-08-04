@@ -19,6 +19,11 @@ window.CONFIG = {
   // Maximum number of messages visible at once
   MAX_MESSAGES: 20,
 
+  // Chat typography
+  CHAT_FONT_SIZE: 20,
+  CHAT_FONT_FAMILY: "system",
+  CHAT_FONT_WEIGHT: 800,
+
   // Platform-specific message colors and optional readability shadow
   TWITCH_MESSAGE_COLOR: "#FFFFFF",
   KICK_MESSAGE_COLOR: "#FFFFFF",
