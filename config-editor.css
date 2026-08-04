@@ -96,8 +96,9 @@ h1 {
   letter-spacing: -0.055em;
 }
 
-.brand-title {
+h1.brand-title {
   color: #bda6ff;
+  font-size: clamp(1.75rem, 3.7vw, 2.75rem);
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -407,9 +408,7 @@ input[type="range"]::-webkit-slider-thumb {
   border: 1px solid var(--border);
   border-radius: 14px;
   color: #fff;
-  background:
-    linear-gradient(145deg, rgba(21, 25, 34, 0.96), rgba(5, 7, 11, 0.96)),
-    repeating-conic-gradient(rgba(255, 255, 255, 0.04) 0 25%, transparent 0 50%) 0 / 18px 18px;
+  background: linear-gradient(120deg, #747d8d 0%, #343b48 48%, #07090d 100%);
   overflow: hidden;
   word-break: break-word;
 }
