@@ -14,9 +14,7 @@ window.CONFIG = {
   // Automatically load global and channel-specific emotes
   ENABLE_7TV: true,
   ENABLE_BTTV: true,
-
-  // FFZ
-  FFZ_CHANNEL: "example_channel",
+  ENABLE_FFZ: true,
 
   // Maximum number of messages visible at once
   MAX_MESSAGES: 20,

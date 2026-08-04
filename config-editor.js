@@ -11,7 +11,7 @@
     KICK_CHATROOM_ID: "",
     ENABLE_7TV: true,
     ENABLE_BTTV: true,
-    FFZ_CHANNEL: "",
+    ENABLE_FFZ: true,
     MAX_MESSAGES: 20,
     HIDE_BADGES: false,
     HIDE_SUB_BADGES: false,
@@ -36,7 +36,7 @@
     kickStatus: document.getElementById("kick-status"),
     enable7TV: document.getElementById("enable-7tv"),
     enableBTTV: document.getElementById("enable-bttv"),
-    ffzChannel: document.getElementById("ffz-channel"),
+    enableFFZ: document.getElementById("enable-ffz"),
     maxMessages: document.getElementById("max-messages"),
     hideBadges: document.getElementById("hide-badges"),
     hideSubBadges: document.getElementById("hide-sub-badges"),
@@ -95,7 +95,7 @@
     elements.kickChatroomId.value = values.KICK_CHATROOM_ID || "";
     elements.enable7TV.checked = values.ENABLE_7TV !== false;
     elements.enableBTTV.checked = values.ENABLE_BTTV !== false;
-    elements.ffzChannel.value = values.FFZ_CHANNEL || "";
+    elements.enableFFZ.checked = values.ENABLE_FFZ !== false;
     elements.maxMessages.value = values.MAX_MESSAGES || 20;
     elements.hideBadges.checked = Object.prototype.hasOwnProperty.call(loadedConfig, "HIDE_BADGES")
       ? Boolean(loadedConfig.HIDE_BADGES)
@@ -189,7 +189,7 @@
       KICK_CHATROOM_ID: Number.isInteger(kickChatroomId) && kickChatroomId > 0 ? kickChatroomId : 0,
       ENABLE_7TV: elements.enable7TV.checked,
       ENABLE_BTTV: elements.enableBTTV.checked,
-      FFZ_CHANNEL: normalizeChannel(elements.ffzChannel.value, "twitch"),
+      ENABLE_FFZ: elements.enableFFZ.checked,
       MAX_MESSAGES: maxMessages,
       HIDE_BADGES: elements.hideBadges.checked,
       HIDE_SUB_BADGES: elements.hideSubBadges.checked,

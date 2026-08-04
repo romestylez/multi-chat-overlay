@@ -14,6 +14,7 @@ const BTTV_TWITCH_USER_ID  = OVERLAY_CONFIG.BTTV_TWITCH_USER_ID || "";
 const FFZ_CHANNEL          = OVERLAY_CONFIG.FFZ_CHANNEL || TWITCH_CHANNEL;
 const ENABLE_7TV           = OVERLAY_CONFIG.ENABLE_7TV !== false;
 const ENABLE_BTTV          = OVERLAY_CONFIG.ENABLE_BTTV !== false;
+const ENABLE_FFZ           = OVERLAY_CONFIG.ENABLE_FFZ !== false;
 
 // ====== Anzeige ======
 const configuredMaxMessages = Number(OVERLAY_CONFIG.MAX_MESSAGES);
@@ -645,8 +646,10 @@ function connectKick() {
     await loadBTTVGlobal();
     if (BTTV_TWITCH_USER_ID) await loadBTTVChannel(BTTV_TWITCH_USER_ID);
   }
-  await loadFFZGlobal();
-  if (FFZ_CHANNEL) await loadFFZChannel(FFZ_CHANNEL);
+  if (ENABLE_FFZ) {
+    await loadFFZGlobal();
+    if (FFZ_CHANNEL) await loadFFZChannel(FFZ_CHANNEL);
+  }
 
   if (TWITCH_CHANNEL) {
     connectTwitch();
