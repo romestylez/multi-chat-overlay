@@ -160,7 +160,7 @@ The badge switches behave as follows:
 
 ## Kick
 
-Enter a Kick channel name. When **config.js speichern**, **config.js herunterladen** or **Overlay-Link erzeugen** is clicked, the corresponding chatroom ID is resolved automatically. The separate **ID ermitteln** button remains available for checking it immediately. The editor requests:
+Enter a Kick channel name. When **config.js speichern**, **config.js herunterladen** or **Overlay-Link erzeugen** is clicked, the corresponding chatroom ID is resolved automatically. The separate **ID ermitteln** button remains available for checking it immediately. The manual ID field stays hidden unless the automatic request fails. The editor requests:
 
 ```text
 https://kick.com/api/v1/channels/YOUR_CHANNEL
@@ -168,7 +168,7 @@ https://kick.com/api/v1/channels/YOUR_CHANNEL
 
 The required value is `chatroom.id`, not the channel `id`. For example, the response for `smtxlost` contains channel ID `610944` and chatroom ID `610727`.
 
-If Kick or the browser blocks the automatic request, no file or overlay link is generated. Enter the chatroom ID manually and repeat the action. When the Kick channel name is changed later, the old ID is discarded and resolved again so it cannot accidentally point to the previous channel.
+If Kick or the browser blocks the automatic request, no file or overlay link is generated and the manual chatroom ID field becomes visible as a fallback. When the Kick channel name is changed later, the old ID is discarded and resolved again so it cannot accidentally point to the previous channel.
 
 The public Kick/Pusher application key and cluster are built into the overlay:
 
@@ -282,7 +282,7 @@ Refresh the browser source or use **Refresh cache of current page** in OBS after
 
 ### The Kick chatroom ID cannot be resolved
 
-Open the public Kick channel endpoint manually, find `chatroom.id` and enter that number in the editor. Do not use the top-level channel `id`.
+Make sure the Kick channel exists and try generating the configuration again. If Kick or the browser blocks the public channel endpoint, the editor reports the error, reveals the manual chatroom ID field and does not create a file or overlay link with an invalid ID.
 
 ### A Twitch badge is missing
 

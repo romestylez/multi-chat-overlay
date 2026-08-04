@@ -27,6 +27,7 @@
 
   let loadedConfig = {};
   let values = { ...defaults, ...loadedConfig };
+  let kickChatroomIdValue = 0;
   let kickChannelForChatroomId = "";
 
   const elements = {
@@ -34,6 +35,7 @@
     twitchChannel: document.getElementById("twitch-channel"),
     kickChannel: document.getElementById("kick-channel"),
     kickChatroomId: document.getElementById("kick-chatroom-id"),
+    kickManualFallback: document.getElementById("kick-manual-fallback"),
     youtubeChannel: document.getElementById("youtube-channel"),
     resolveKick: document.getElementById("resolve-kick"),
     kickStatus: document.getElementById("kick-status"),
@@ -156,8 +158,12 @@
   function populateForm(source) {
     elements.twitchChannel.value = values.TWITCH_CHANNEL || "";
     elements.kickChannel.value = values.KICK_CHANNEL || "";
-    elements.kickChatroomId.value = values.KICK_CHATROOM_ID || "";
-    kickChannelForChatroomId = Number(values.KICK_CHATROOM_ID) > 0
+    kickChatroomIdValue = Number.isInteger(Number(values.KICK_CHATROOM_ID)) && Number(values.KICK_CHATROOM_ID) > 0
+      ? Number(values.KICK_CHATROOM_ID)
+      : 0;
+    elements.kickChatroomId.value = kickChatroomIdValue || "";
+    elements.kickManualFallback.hidden = true;
+    kickChannelForChatroomId = kickChatroomIdValue > 0
       ? normalizeChannel(values.KICK_CHANNEL, "kick")
       : "";
     elements.youtubeChannel.value = values.YOUTUBE_CHANNEL || "";
@@ -203,7 +209,9 @@
       throw new Error("In der Antwort wurde keine gültige chatroom.id gefunden.");
     }
 
+    kickChatroomIdValue = chatroomId;
     elements.kickChatroomId.value = String(chatroomId);
+    elements.kickManualFallback.hidden = true;
     if (data.slug) elements.kickChannel.value = String(data.slug).toLowerCase();
     kickChannelForChatroomId = normalizeChannel(elements.kickChannel.value, "kick");
     setKickStatus(`Chatroom-ID ${chatroomId} wurde übernommen.`, "success");
@@ -236,9 +244,10 @@
       return readKickResponse(await response.json());
     } catch (error) {
       const message = error?.name === "AbortError"
-        ? "Kick hat zu lange nicht geantwortet. Bitte die Chatroom-ID manuell eintragen."
-        : "Die automatische Abfrage wurde blockiert. Bitte die Chatroom-ID manuell eintragen.";
+        ? "Kick hat zu lange nicht geantwortet. Versuche es bitte erneut."
+        : "Die automatische Abfrage ist fehlgeschlagen. Versuche es bitte erneut.";
       setKickStatus(message, "error");
+      elements.kickManualFallback.hidden = false;
       console.warn("[Config Editor] Kick lookup failed:", error);
       return 0;
     } finally {
@@ -255,12 +264,13 @@
       throw new Error("Der Kick-Kanal enthält ungültige Zeichen.");
     }
 
-    const chatroomId = Number(elements.kickChatroomId.value);
+    const chatroomId = kickChatroomIdValue;
     if (Number.isInteger(chatroomId) && chatroomId > 0 && kickChannelForChatroomId === channel) return;
 
     const resolvedId = await resolveKickChatroom();
     if (!resolvedId) {
-      throw new Error("Die Kick-Chatroom-ID konnte nicht automatisch ermittelt werden. Trage sie bitte manuell ein.");
+      elements.kickChatroomId.focus();
+      throw new Error("Die Kick-Chatroom-ID konnte nicht automatisch ermittelt werden. Es wurde kein Overlay-Link erstellt.");
     }
   }
 
@@ -268,7 +278,7 @@
     const twitchChannel = normalizeChannel(elements.twitchChannel.value, "twitch");
     const kickChannel = normalizeChannel(elements.kickChannel.value, "kick");
     const youtubeChannel = normalizeChannel(elements.youtubeChannel.value, "youtube");
-    const kickChatroomId = Number(elements.kickChatroomId.value);
+    const kickChatroomId = kickChatroomIdValue;
     const maxMessages = Number(elements.maxMessages.value);
 
     if (!twitchChannel && !kickChatroomId && !youtubeChannel) {
@@ -395,14 +405,19 @@
   });
   elements.kickChannel.addEventListener("input", () => {
     const channel = normalizeChannel(elements.kickChannel.value, "kick");
-    if (Number(elements.kickChatroomId.value) > 0 && kickChannelForChatroomId && channel !== kickChannelForChatroomId) {
+    if (kickChatroomIdValue > 0 && kickChannelForChatroomId && channel !== kickChannelForChatroomId) {
+      kickChatroomIdValue = 0;
       elements.kickChatroomId.value = "";
+      elements.kickManualFallback.hidden = true;
       kickChannelForChatroomId = "";
       setKickStatus("Kanal geändert – die Chatroom-ID wird beim Erzeugen des Links neu ermittelt.", "neutral");
     }
   });
   elements.kickChatroomId.addEventListener("input", () => {
-    kickChannelForChatroomId = Number(elements.kickChatroomId.value) > 0
+    kickChatroomIdValue = Number.isInteger(Number(elements.kickChatroomId.value)) && Number(elements.kickChatroomId.value) > 0
+      ? Number(elements.kickChatroomId.value)
+      : 0;
+    kickChannelForChatroomId = kickChatroomIdValue > 0
       ? normalizeChannel(elements.kickChannel.value, "kick")
       : "";
   });
