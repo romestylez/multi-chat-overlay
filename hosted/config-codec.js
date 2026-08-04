@@ -10,12 +10,14 @@
     TWITCH_CHANNEL: "",
     KICK_CHANNEL: "",
     KICK_CHATROOM_ID: 0,
+    YOUTUBE_CHANNEL: "",
     ENABLE_7TV: true,
     ENABLE_BTTV: true,
     ENABLE_FFZ: true,
     MAX_MESSAGES: 20,
     TWITCH_MESSAGE_COLOR: "#FFFFFF",
     KICK_MESSAGE_COLOR: "#FFFFFF",
+    YOUTUBE_MESSAGE_COLOR: "#FFFFFF",
     ENABLE_TEXT_SHADOW: false,
     HIDE_BADGES: false,
     HIDE_SUB_BADGES: false,
@@ -31,12 +33,14 @@
     ["TWITCH_CHANNEL", "t", "twitchChannel"],
     ["KICK_CHANNEL", "k", "kickChannel"],
     ["KICK_CHATROOM_ID", "ki", "positiveInteger"],
+    ["YOUTUBE_CHANNEL", "y", "youtubeChannel"],
     ["ENABLE_7TV", "e7", "boolean"],
     ["ENABLE_BTTV", "eb", "boolean"],
     ["ENABLE_FFZ", "ef", "boolean"],
     ["MAX_MESSAGES", "m", "messageCount"],
     ["TWITCH_MESSAGE_COLOR", "tc", "color"],
     ["KICK_MESSAGE_COLOR", "kc", "color"],
+    ["YOUTUBE_MESSAGE_COLOR", "yc", "color"],
     ["ENABLE_TEXT_SHADOW", "ts", "boolean"],
     ["HIDE_BADGES", "hb", "boolean"],
     ["HIDE_SUB_BADGES", "hs", "boolean"],
@@ -63,13 +67,17 @@
       return fallback;
     }
 
-    if (type === "twitchChannel" || type === "kickChannel") {
+    if (type === "twitchChannel" || type === "kickChannel" || type === "youtubeChannel") {
       if (typeof value !== "string") {
         if (strict) throw new Error("Der Link enthält einen ungültigen Kanalnamen.");
         return fallback;
       }
       const channel = value.trim().toLowerCase();
-      const pattern = type === "twitchChannel" ? /^[a-z0-9_]{0,25}$/ : /^[a-z0-9_-]{0,80}$/;
+      const pattern = type === "twitchChannel"
+        ? /^[a-z0-9_]{0,25}$/
+        : type === "kickChannel"
+          ? /^[a-z0-9_-]{0,80}$/
+          : /^[\p{L}\p{N}._-]{0,50}$/u;
       if (!pattern.test(channel)) {
         if (strict) throw new Error("Der Link enthält einen ungültigen Kanalnamen.");
         return fallback;

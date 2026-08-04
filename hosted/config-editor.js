@@ -6,12 +6,14 @@
     TWITCH_CHANNEL: "",
     KICK_CHANNEL: "",
     KICK_CHATROOM_ID: 0,
+    YOUTUBE_CHANNEL: "",
     ENABLE_7TV: true,
     ENABLE_BTTV: true,
     ENABLE_FFZ: true,
     MAX_MESSAGES: 20,
     TWITCH_MESSAGE_COLOR: "#FFFFFF",
     KICK_MESSAGE_COLOR: "#FFFFFF",
+    YOUTUBE_MESSAGE_COLOR: "#FFFFFF",
     ENABLE_TEXT_SHADOW: false,
     HIDE_BADGES: false,
     HIDE_SUB_BADGES: false,
@@ -31,6 +33,7 @@
     twitchChannel: document.getElementById("twitch-channel"),
     kickChannel: document.getElementById("kick-channel"),
     kickChatroomId: document.getElementById("kick-chatroom-id"),
+    youtubeChannel: document.getElementById("youtube-channel"),
     resolveKick: document.getElementById("resolve-kick"),
     kickStatus: document.getElementById("kick-status"),
     enable7TV: document.getElementById("enable-7tv"),
@@ -41,6 +44,8 @@
     twitchMessageColorHex: document.getElementById("twitch-message-color-hex"),
     kickMessageColor: document.getElementById("kick-message-color"),
     kickMessageColorHex: document.getElementById("kick-message-color-hex"),
+    youtubeMessageColor: document.getElementById("youtube-message-color"),
+    youtubeMessageColorHex: document.getElementById("youtube-message-color-hex"),
     enableTextShadow: document.getElementById("enable-text-shadow"),
     hideBadges: document.getElementById("hide-badges"),
     hideSubBadges: document.getElementById("hide-sub-badges"),
@@ -66,8 +71,9 @@
 
   function normalizeChannel(value, platform) {
     let channel = String(value || "").trim();
-    const host = platform === "kick" ? "kick.com" : "twitch.tv";
-    channel = channel.replace(new RegExp(`^https?:\\/\\/(?:www\\.)?${host.replace(".", "\\.")}\\/`, "i"), "");
+    const host = platform === "kick" ? "kick.com" : platform === "youtube" ? "youtube.com" : "twitch.tv";
+    const subdomains = platform === "youtube" ? "(?:(?:www|m)\\.)?" : "(?:www\\.)?";
+    channel = channel.replace(new RegExp(`^https?:\\/\\/${subdomains}${host.replace(".", "\\.")}\\/`, "i"), "");
     channel = channel.split(/[/?#]/)[0].replace(/^@/, "");
     return channel.toLowerCase();
   }
@@ -150,6 +156,7 @@
     elements.twitchChannel.value = values.TWITCH_CHANNEL || "";
     elements.kickChannel.value = values.KICK_CHANNEL || "";
     elements.kickChatroomId.value = values.KICK_CHATROOM_ID || "";
+    elements.youtubeChannel.value = values.YOUTUBE_CHANNEL || "";
     elements.enable7TV.checked = values.ENABLE_7TV !== false;
     elements.enableBTTV.checked = values.ENABLE_BTTV !== false;
     elements.enableFFZ.checked = values.ENABLE_FFZ !== false;
@@ -157,10 +164,13 @@
 
     const twitchMessageColor = normalizedHexColor(values.TWITCH_MESSAGE_COLOR) || "#FFFFFF";
     const kickMessageColor = normalizedHexColor(values.KICK_MESSAGE_COLOR) || "#FFFFFF";
+    const youtubeMessageColor = normalizedHexColor(values.YOUTUBE_MESSAGE_COLOR) || "#FFFFFF";
     elements.twitchMessageColor.value = twitchMessageColor.toLowerCase();
     elements.twitchMessageColorHex.value = twitchMessageColor;
     elements.kickMessageColor.value = kickMessageColor.toLowerCase();
     elements.kickMessageColorHex.value = kickMessageColor;
+    elements.youtubeMessageColor.value = youtubeMessageColor.toLowerCase();
+    elements.youtubeMessageColorHex.value = youtubeMessageColor;
     elements.enableTextShadow.checked = Boolean(values.ENABLE_TEXT_SHADOW);
     elements.hideBadges.checked = Object.prototype.hasOwnProperty.call(loadedConfig, "HIDE_BADGES")
       ? Boolean(loadedConfig.HIDE_BADGES)
@@ -206,19 +216,27 @@
     elements.kickChannel.value = channel;
     setKickStatus("Kick-Chatroom-ID wird geladen …", "working");
     elements.resolveKick.disabled = true;
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 10000);
 
     try {
       const response = await fetch(`https://kick.com/api/v1/channels/${encodeURIComponent(channel)}`, {
         headers: { Accept: "application/json" },
-        credentials: "omit"
+        credentials: "omit",
+        referrerPolicy: "no-referrer",
+        signal: controller.signal
       });
 
       if (!response.ok) throw new Error(`Kick antwortet mit HTTP ${response.status}.`);
       readKickResponse(await response.json());
     } catch (error) {
-      setKickStatus("Die automatische Abfrage wurde blockiert. Bitte die Chatroom-ID manuell eintragen.", "error");
+      const message = error?.name === "AbortError"
+        ? "Kick hat zu lange nicht geantwortet. Bitte die Chatroom-ID manuell eintragen."
+        : "Die automatische Abfrage wurde blockiert. Bitte die Chatroom-ID manuell eintragen.";
+      setKickStatus(message, "error");
       console.warn("[Config Editor] Kick lookup failed:", error);
     } finally {
+      window.clearTimeout(timeoutId);
       elements.resolveKick.disabled = false;
     }
   }
@@ -226,11 +244,12 @@
   function buildConfig() {
     const twitchChannel = normalizeChannel(elements.twitchChannel.value, "twitch");
     const kickChannel = normalizeChannel(elements.kickChannel.value, "kick");
+    const youtubeChannel = normalizeChannel(elements.youtubeChannel.value, "youtube");
     const kickChatroomId = Number(elements.kickChatroomId.value);
     const maxMessages = Number(elements.maxMessages.value);
 
-    if (!twitchChannel && !kickChatroomId) {
-      throw new Error("Konfiguriere mindestens einen Twitch- oder Kick-Kanal.");
+    if (!twitchChannel && !kickChatroomId && !youtubeChannel) {
+      throw new Error("Konfiguriere mindestens einen Twitch-, Kick- oder YouTube-Kanal.");
     }
     if (twitchChannel && !/^[a-z0-9_]{1,25}$/.test(twitchChannel)) {
       throw new Error("Der Twitch-Kanal enthält ungültige Zeichen.");
@@ -241,6 +260,9 @@
     if (kickChannel && (!Number.isInteger(kickChatroomId) || kickChatroomId <= 0)) {
       throw new Error("Für den Kick-Kanal fehlt eine gültige Chatroom-ID.");
     }
+    if (youtubeChannel && !/^[\p{L}\p{N}._-]{3,50}$/u.test(youtubeChannel)) {
+      throw new Error("Der YouTube-Kanal enthält ungültige Zeichen oder ist zu kurz.");
+    }
     if (!Number.isInteger(maxMessages) || maxMessages < 1 || maxMessages > 200) {
       throw new Error("Die maximale Nachrichtenanzahl muss zwischen 1 und 200 liegen.");
     }
@@ -249,12 +271,14 @@
       TWITCH_CHANNEL: twitchChannel,
       KICK_CHANNEL: kickChannel,
       KICK_CHATROOM_ID: Number.isInteger(kickChatroomId) && kickChatroomId > 0 ? kickChatroomId : 0,
+      YOUTUBE_CHANNEL: youtubeChannel,
       ENABLE_7TV: elements.enable7TV.checked,
       ENABLE_BTTV: elements.enableBTTV.checked,
       ENABLE_FFZ: elements.enableFFZ.checked,
       MAX_MESSAGES: maxMessages,
       TWITCH_MESSAGE_COLOR: readHexColor(elements.twitchMessageColorHex, "Die Twitch-Nachrichtenfarbe"),
       KICK_MESSAGE_COLOR: readHexColor(elements.kickMessageColorHex, "Die Kick-Nachrichtenfarbe"),
+      YOUTUBE_MESSAGE_COLOR: readHexColor(elements.youtubeMessageColorHex, "Die YouTube-Nachrichtenfarbe"),
       ENABLE_TEXT_SHADOW: elements.enableTextShadow.checked,
       HIDE_BADGES: elements.hideBadges.checked,
       HIDE_SUB_BADGES: elements.hideSubBadges.checked,
@@ -273,7 +297,7 @@
     if (!codec) throw new Error("Die Online-Konfiguration konnte nicht geladen werden.");
     const url = codec.overlayUrl(buildConfig(), window.location.href);
     elements.generatedOverlayUrl.value = url;
-    setDialogStatus(elements.copyStatus, "Der Link enthält die vollständige Konfiguration.", "neutral");
+    setDialogStatus(elements.copyStatus, "", "neutral");
     showDialog(elements.linkDialog);
     elements.generatedOverlayUrl.focus();
     elements.generatedOverlayUrl.select();
@@ -338,11 +362,15 @@
   elements.blockPrefixCommands.addEventListener("change", syncBlockedCommandsAvailability);
   bindColorInputs(elements.twitchMessageColor, elements.twitchMessageColorHex);
   bindColorInputs(elements.kickMessageColor, elements.kickMessageColorHex);
+  bindColorInputs(elements.youtubeMessageColor, elements.youtubeMessageColorHex);
   elements.twitchChannel.addEventListener("blur", () => {
     elements.twitchChannel.value = normalizeChannel(elements.twitchChannel.value, "twitch");
   });
   elements.kickChannel.addEventListener("blur", () => {
     elements.kickChannel.value = normalizeChannel(elements.kickChannel.value, "kick");
+  });
+  elements.youtubeChannel.addEventListener("blur", () => {
+    elements.youtubeChannel.value = normalizeChannel(elements.youtubeChannel.value, "youtube");
   });
 
   applyMode();

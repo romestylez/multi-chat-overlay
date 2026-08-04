@@ -10,6 +10,7 @@
   --accent: #8b5cf6;
   --accent-strong: #7444e8;
   --kick: #53fc18;
+  --youtube: #ff3b30;
   --success: #69e39c;
   --danger: #ff7b8a;
   --working: #f6c85f;
@@ -171,10 +172,19 @@ h2 {
   background: rgba(105, 227, 156, 0.08);
 }
 
+.platform-grid,
 .section-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
+}
+
+.platform-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 18px;
+}
+
+.section-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .config-card {
@@ -192,6 +202,10 @@ h2 {
 
 .kick-card {
   border-top-color: rgba(83, 252, 24, 0.55);
+}
+
+.youtube-card {
+  border-top-color: rgba(255, 59, 48, 0.68);
 }
 
 .wide-card {
@@ -233,6 +247,11 @@ h2 {
 .kick-mark {
   border-color: rgba(83, 252, 24, 0.32);
   background: rgba(83, 252, 24, 0.09);
+}
+
+.youtube-mark {
+  border-color: rgba(255, 59, 48, 0.38);
+  background: rgba(255, 59, 48, 0.1);
 }
 
 .field,
@@ -351,6 +370,15 @@ textarea:disabled {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
+}
+
+.color-field-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 8px;
+}
+
+.config-card > .field + .color-settings {
+  margin-top: 18px;
 }
 
 .field-grid + .field,
@@ -553,6 +581,10 @@ textarea:disabled {
   line-height: 1.45;
 }
 
+.dialog-status:empty {
+  display: none;
+}
+
 .dialog-actions {
   display: flex;
   justify-content: flex-end;
@@ -590,6 +622,7 @@ textarea:disabled {
     align-self: flex-start;
   }
 
+  .platform-grid,
   .section-grid,
   .field-grid,
   .filter-grid,

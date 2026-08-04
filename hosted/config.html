@@ -15,7 +15,7 @@
         <p class="eyebrow">Multi Chat Overlay</p>
         <h1>Overlay konfigurieren</h1>
         <p class="hero-copy">
-          Twitch- und Kick-Chat einrichten und einen fertigen OBS-Link erzeugen.
+          Twitch-, Kick- und YouTube-Chat einrichten und einen fertigen OBS-Link erzeugen.
           Die Einstellungen werden ausschließlich im Link gespeichert.
         </p>
       </div>
@@ -37,7 +37,7 @@
 
     <main>
       <form id="config-form" novalidate>
-        <div class="section-grid">
+        <div class="platform-grid">
           <section class="config-card twitch-card" aria-labelledby="twitch-heading">
             <div class="card-heading">
               <span class="platform-mark twitch-mark" aria-hidden="true">
@@ -75,6 +75,24 @@
 
             <div id="kick-status" class="inline-status" role="status" aria-live="polite"></div>
           </section>
+
+          <section class="config-card youtube-card" aria-labelledby="youtube-heading">
+            <div class="card-heading">
+              <span class="platform-mark youtube-mark" aria-hidden="true">
+                <img src="img/youtube_icon.svg" alt="">
+              </span>
+              <h2 id="youtube-heading">YouTube</h2>
+            </div>
+
+            <label class="field">
+              <span>YouTube-Kanal</span>
+              <input id="youtube-channel" name="youtube-channel" type="text" autocomplete="off" placeholder="z. B. romestylez">
+              <small>Handle ohne @. Das Overlay findet den jeweils aktuellen Livestream automatisch.</small>
+            </label>
+          </section>
+        </div>
+
+        <div class="section-grid">
 
           <section class="config-card" aria-labelledby="emotes-heading">
             <div class="card-heading compact-heading">
@@ -122,19 +140,29 @@
               <span>Maximale Nachrichten</span>
               <input id="max-messages" type="number" min="1" max="200" step="1" value="20">
             </label>
-            <div class="field-grid">
-              <div class="field">
-                <label for="twitch-message-color-hex">Twitch-Nachrichtenfarbe</label>
-                <div class="color-input-row">
-                  <input id="twitch-message-color" type="color" value="#ffffff" aria-label="Twitch-Nachrichtenfarbe auswählen">
-                  <input id="twitch-message-color-hex" type="text" maxlength="7" spellcheck="false" value="#FFFFFF" placeholder="#FFFFFF">
+            <div class="field color-settings">
+              <span>Nachrichtenfarbe</span>
+              <div class="field-grid color-field-grid">
+                <div class="field">
+                  <label for="twitch-message-color-hex">Twitch</label>
+                  <div class="color-input-row">
+                    <input id="twitch-message-color" type="color" value="#ffffff" aria-label="Twitch-Nachrichtenfarbe auswählen">
+                    <input id="twitch-message-color-hex" type="text" maxlength="7" spellcheck="false" value="#FFFFFF" placeholder="#FFFFFF">
+                  </div>
                 </div>
-              </div>
-              <div class="field">
-                <label for="kick-message-color-hex">Kick-Nachrichtenfarbe</label>
-                <div class="color-input-row">
-                  <input id="kick-message-color" type="color" value="#ffffff" aria-label="Kick-Nachrichtenfarbe auswählen">
-                  <input id="kick-message-color-hex" type="text" maxlength="7" spellcheck="false" value="#FFFFFF" placeholder="#FFFFFF">
+                <div class="field">
+                  <label for="kick-message-color-hex">Kick</label>
+                  <div class="color-input-row">
+                    <input id="kick-message-color" type="color" value="#ffffff" aria-label="Kick-Nachrichtenfarbe auswählen">
+                    <input id="kick-message-color-hex" type="text" maxlength="7" spellcheck="false" value="#FFFFFF" placeholder="#FFFFFF">
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="youtube-message-color-hex">YouTube</label>
+                  <div class="color-input-row">
+                    <input id="youtube-message-color" type="color" value="#ffffff" aria-label="YouTube-Nachrichtenfarbe auswählen">
+                    <input id="youtube-message-color-hex" type="text" maxlength="7" spellcheck="false" value="#FFFFFF" placeholder="#FFFFFF">
+                  </div>
                 </div>
               </div>
             </div>
@@ -151,7 +179,7 @@
               <span class="switch" aria-hidden="true"></span>
               <span>
                 <strong>Badges ausblenden</strong>
-                <small>Blendet alle unterstützten Twitch- und Kick-Badges aus.</small>
+                <small>Blendet alle unterstützten Twitch-, Kick- und YouTube-Badges aus.</small>
               </span>
             </label>
             <label class="switch-row">
@@ -159,7 +187,7 @@
               <span class="switch" aria-hidden="true"></span>
               <span>
                 <strong>Sub-Badges ausblenden</strong>
-                <small>Blendet Twitch Subscriber- und Founder-Badges aus.</small>
+                <small>Blendet Twitch Subscriber-/Founder-Badges und YouTube-Mitgliedsbadges aus.</small>
               </span>
             </label>
             <label class="switch-row">
@@ -175,7 +203,7 @@
               <span class="switch" aria-hidden="true"></span>
               <span>
                 <strong>Plattform-Icon ausblenden</strong>
-                <small>Entfernt das Twitch- oder Kick-Icon vor jeder Nachricht.</small>
+                <small>Entfernt das Twitch-, Kick- oder YouTube-Icon vor jeder Nachricht.</small>
               </span>
             </label>
           </section>
