@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <title>Multi Chat Overlay – Konfiguration</title>
+  <link rel="stylesheet" href="config-editor.css">
+  <script src="config.js"></script>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Multi Chat Overlay</p>
+        <h1>Overlay konfigurieren</h1>
+        <p class="hero-copy">
+          Twitch- und Kick-Chat einrichten, Filter festlegen und anschließend eine lokale
+          <code>config.js</code> speichern. Die erzeugte Datei bleibt auf deinem Rechner.
+        </p>
+      </div>
+      <div id="load-state" class="state-pill" role="status">Konfiguration wird geladen …</div>
+    </header>
+
+    <main>
+      <form id="config-form" novalidate>
+        <div class="section-grid">
+          <section class="config-card twitch-card" aria-labelledby="twitch-heading">
+            <div class="card-heading">
+              <span class="platform-mark twitch-mark">T</span>
+              <div>
+                <p class="section-kicker">Plattform</p>
+                <h2 id="twitch-heading">Twitch</h2>
+              </div>
+            </div>
+
+            <label class="field">
+              <span>Twitch-Kanal</span>
+              <input id="twitch-channel" name="twitch-channel" type="text" autocomplete="off" placeholder="z. B. smtxlost">
+            </label>
+          </section>
+
+          <section class="config-card kick-card" aria-labelledby="kick-heading">
+            <div class="card-heading">
+              <span class="platform-mark kick-mark">K</span>
+              <div>
+                <p class="section-kicker">Plattform</p>
+                <h2 id="kick-heading">Kick</h2>
+              </div>
+            </div>
+
+            <label class="field">
+              <span>Kick-Kanal</span>
+              <div class="input-action-row">
+                <input id="kick-channel" name="kick-channel" type="text" autocomplete="off" placeholder="z. B. smtxlost">
+                <button id="resolve-kick" class="button button-secondary" type="button">ID ermitteln</button>
+              </div>
+            </label>
+
+            <label class="field">
+              <span>Kick-Chatroom-ID</span>
+              <input id="kick-chatroom-id" name="kick-chatroom-id" type="number" min="1" step="1" inputmode="numeric" placeholder="z. B. 610727">
+            </label>
+
+            <div id="kick-status" class="inline-status" role="status" aria-live="polite"></div>
+          </section>
+
+          <section class="config-card" aria-labelledby="emotes-heading">
+            <div class="card-heading compact-heading">
+              <div>
+                <p class="section-kicker">Erweiterungen</p>
+                <h2 id="emotes-heading">Emotes</h2>
+              </div>
+            </div>
+
+            <div class="field-grid">
+              <label class="field">
+                <span>7TV User-ID</span>
+                <input id="seventv-user-id" type="text" autocomplete="off" placeholder="Optional">
+              </label>
+              <label class="field">
+                <span>BTTV Twitch User-ID</span>
+                <input id="bttv-user-id" type="text" autocomplete="off" placeholder="Optional">
+              </label>
+            </div>
+            <label class="field">
+              <span>FFZ-Kanal</span>
+              <input id="ffz-channel" type="text" autocomplete="off" placeholder="Leer = Twitch-Kanal verwenden">
+            </label>
+          </section>
+
+          <section class="config-card" aria-labelledby="display-heading">
+            <div class="card-heading compact-heading">
+              <div>
+                <p class="section-kicker">Darstellung</p>
+                <h2 id="display-heading">Anzeige</h2>
+              </div>
+            </div>
+
+            <label class="field">
+              <span>Maximale Nachrichten</span>
+              <input id="max-messages" type="number" min="1" max="200" step="1" value="20">
+            </label>
+            <label class="switch-row">
+              <input id="hide-badges" type="checkbox">
+              <span class="switch" aria-hidden="true"></span>
+              <span>
+                <strong>Badges ausblenden</strong>
+                <small>Blendet alle unterstützten Twitch- und Kick-Badges aus.</small>
+              </span>
+            </label>
+            <label class="switch-row">
+              <input id="hide-sub-badges" type="checkbox">
+              <span class="switch" aria-hidden="true"></span>
+              <span>
+                <strong>Sub-Badges ausblenden</strong>
+                <small>Blendet Twitch Subscriber- und Founder-Badges aus.</small>
+              </span>
+            </label>
+            <label class="switch-row">
+              <input id="hide-global-badge" type="checkbox">
+              <span class="switch" aria-hidden="true"></span>
+              <span>
+                <strong>Globales Abzeichen ausblenden</strong>
+                <small>Blendet das vom Twitch-Benutzer ausgewählte globale Abzeichen aus.</small>
+              </span>
+            </label>
+            <label class="switch-row">
+              <input id="hide-platform" type="checkbox">
+              <span class="switch" aria-hidden="true"></span>
+              <span>
+                <strong>Plattform-Icon ausblenden</strong>
+                <small>Entfernt das Twitch- oder Kick-Icon vor jeder Nachricht.</small>
+              </span>
+            </label>
+          </section>
+
+          <section class="config-card wide-card" aria-labelledby="filters-heading">
+            <div class="card-heading compact-heading">
+              <div>
+                <p class="section-kicker">Moderation</p>
+                <h2 id="filters-heading">Filter</h2>
+              </div>
+            </div>
+
+            <div class="filter-grid">
+              <label class="field">
+                <span>Blockierte Benutzer</span>
+                <textarea id="blocked-users" rows="5" placeholder="nightbot&#10;streamelements&#10;moobot"></textarea>
+                <small>Ein Benutzername pro Zeile.</small>
+              </label>
+              <label class="field">
+                <span>Blockierte Befehle</span>
+                <textarea id="blocked-commands" rows="5" placeholder="!discord&#10;!socials"></textarea>
+                <small id="blocked-commands-hint">Ein Befehl inklusive Präfix pro Zeile.</small>
+              </label>
+            </div>
+
+            <div class="switch-grid">
+              <label class="switch-row">
+                <input id="block-prefix-commands" type="checkbox">
+                <span class="switch" aria-hidden="true"></span>
+                <span>
+                  <strong>Alle !-Befehle blockieren</strong>
+                  <small>Blendet jede Nachricht aus, die mit <code>!</code> beginnt.</small>
+                </span>
+              </label>
+              <label class="switch-row">
+                <input id="block-links" type="checkbox">
+                <span class="switch" aria-hidden="true"></span>
+                <span>
+                  <strong>Links blockieren</strong>
+                  <small>Filtert Nachrichten mit HTTP-, HTTPS- oder WWW-Links.</small>
+                </span>
+              </label>
+            </div>
+          </section>
+        </div>
+
+        <div class="action-bar">
+          <div>
+            <p id="save-status" class="save-status" role="status" aria-live="polite">Konfiguration wird geprüft …</p>
+            <p id="save-hint" class="save-hint"></p>
+          </div>
+          <div class="action-buttons">
+            <button id="download-config" class="button button-secondary" type="button">config.js herunterladen</button>
+            <button class="button button-primary" type="submit">config.js speichern</button>
+          </div>
+        </div>
+      </form>
+    </main>
+  </div>
+
+  <script src="config-editor.js"></script>
+</body>
+</html>

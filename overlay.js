@@ -1,21 +1,113 @@
 // ==== KONFIGURATION ==== (aus config.js laden)
-const TWITCH_CHANNEL       = CONFIG.TWITCH_CHANNEL;
-const TWITCH_OAUTH         = CONFIG.TWITCH_OAUTH;
+const OVERLAY_CONFIG = typeof CONFIG !== "undefined" ? CONFIG : {};
 
-const KICK_APP_KEY         = CONFIG.KICK_APP_KEY;
-const KICK_CLUSTER         = CONFIG.KICK_CLUSTER;
-const KICK_CHATROOM_ID     = CONFIG.KICK_CHATROOM_ID;
+const TWITCH_CHANNEL       = OVERLAY_CONFIG.TWITCH_CHANNEL || "";
+const TWITCH_OAUTH         = OVERLAY_CONFIG.TWITCH_OAUTH || "";
+const TWITCH_USERNAME      = OVERLAY_CONFIG.TWITCH_USERNAME || TWITCH_CHANNEL;
 
-const SEVENTV_USER_ID      = CONFIG.SEVENTV_USER_ID;
-const BTTV_TWITCH_USER_ID  = CONFIG.BTTV_TWITCH_USER_ID;
+const KICK_APP_KEY         = OVERLAY_CONFIG.KICK_APP_KEY || "32cbd69e4b950bf97679";
+const KICK_CLUSTER         = OVERLAY_CONFIG.KICK_CLUSTER || "us2";
+const KICK_CHATROOM_ID     = Number(OVERLAY_CONFIG.KICK_CHATROOM_ID) || 0;
+
+const SEVENTV_USER_ID      = OVERLAY_CONFIG.SEVENTV_USER_ID || "";
+const BTTV_TWITCH_USER_ID  = OVERLAY_CONFIG.BTTV_TWITCH_USER_ID || "";
+const FFZ_CHANNEL          = OVERLAY_CONFIG.FFZ_CHANNEL || TWITCH_CHANNEL;
 
 // ====== Anzeige ======
-const MAX_MESSAGES = 20;      
+const configuredMaxMessages = Number(OVERLAY_CONFIG.MAX_MESSAGES);
+const MAX_MESSAGES = Number.isInteger(configuredMaxMessages) && configuredMaxMessages > 0
+  ? configuredMaxMessages
+  : 20;
+const HIDE_BADGES = Object.prototype.hasOwnProperty.call(OVERLAY_CONFIG, "HIDE_BADGES")
+  ? OVERLAY_CONFIG.HIDE_BADGES === true
+  : OVERLAY_CONFIG.SHOW_BADGES === false;
+const SHOW_BADGES = !HIDE_BADGES;
+const HIDE_SUB_BADGES = OVERLAY_CONFIG.HIDE_SUB_BADGES === true;
+const HIDE_GLOBAL_BADGE = OVERLAY_CONFIG.HIDE_GLOBAL_BADGE === true;
+const HIDE_PLATFORM = OVERLAY_CONFIG.HIDE_PLATFORM === true;
 
 // ==== State ====
 const chatBox = document.getElementById("chat");
 let emoteMap = {};
 let twitchEmoteCache = {};
+let twitchBadgeMap = {};
+let twitchBadgeRoomId = "";
+let twitchBadgeLoadPromise = null;
+
+// ===== Twitch-Badges laden =====
+function resolvePendingTwitchBadges() {
+  document.querySelectorAll("[data-twitch-badge-key]").forEach(element => {
+    const badge = twitchBadgeMap[element.dataset.twitchBadgeKey];
+    if (!badge) return;
+
+    element.src = badge.imageUrl;
+    element.alt = badge.title;
+    element.title = badge.title;
+    element.classList.remove("twitch-badge-pending");
+    element.removeAttribute("data-twitch-badge-key");
+  });
+}
+
+function indexTwitchBadgeSets(data) {
+  const badgeSets = Array.isArray(data) ? data : [data];
+
+  badgeSets.forEach(set => {
+    if (!set?.set_id || !Array.isArray(set.versions)) return;
+
+    set.versions.forEach(version => {
+      const imageUrl = version?.image_url_2x || version?.image_url_1x;
+      if (!version?.id || !imageUrl) return;
+
+      twitchBadgeMap[`${set.set_id}/${version.id}`] = {
+        imageUrl,
+        title: version.title || set.set_id
+      };
+    });
+  });
+
+  resolvePendingTwitchBadges();
+}
+
+async function loadTwitchBadges(roomId) {
+  const normalizedRoomId = String(roomId || "").trim();
+  if (!SHOW_BADGES || !normalizedRoomId) return;
+  if (twitchBadgeRoomId === normalizedRoomId && twitchBadgeLoadPromise) {
+    return twitchBadgeLoadPromise;
+  }
+
+  twitchBadgeRoomId = normalizedRoomId;
+  twitchBadgeMap = {};
+  twitchBadgeLoadPromise = (async () => {
+    const requests = [
+      fetch(`https://api.ivr.fi/v2/twitch/badges/channel?id=${encodeURIComponent(normalizedRoomId)}`),
+      fetch("https://api.ivr.fi/v2/twitch/badges/global")
+    ];
+    const results = await Promise.allSettled(requests);
+    let loadedSets = 0;
+
+    for (const result of results) {
+      if (result.status !== "fulfilled" || !result.value.ok) continue;
+
+      try {
+        const data = await result.value.json();
+        indexTwitchBadgeSets(data);
+        loadedSets++;
+      } catch (error) {
+        console.warn("[Twitch] Badge-Antwort konnte nicht gelesen werden:", error);
+      }
+    }
+
+    if (loadedSets > 0) {
+      console.log("[Twitch] Badge-Katalog geladen");
+    } else {
+      console.warn("[Twitch] Badge-Katalog nicht verfügbar; Chat läuft ohne dynamische Badges weiter");
+    }
+  })().catch(error => {
+    console.warn("[Twitch] Badge-Katalog konnte nicht geladen werden:", error);
+  });
+
+  return twitchBadgeLoadPromise;
+}
 
 // ===== 7TV laden =====
 async function load7TVUser() {
@@ -186,22 +278,120 @@ function escapeHtml(str) {
   );
 }
 
+function parseTwitchTags(message) {
+  const tagsRaw = message.startsWith("@") ? message.split(" ")[0] : "";
+  const tags = {};
+
+  if (tagsRaw) {
+    tagsRaw.substring(1).split(";").forEach(tag => {
+      const separatorIndex = tag.indexOf("=");
+      const key = separatorIndex === -1 ? tag : tag.substring(0, separatorIndex);
+      const value = separatorIndex === -1 ? "" : tag.substring(separatorIndex + 1);
+      tags[key] = value;
+    });
+  }
+
+  return tags;
+}
+
+function twitchBadgeImage(src, alt) {
+  return `<img class="badge" src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" title="${escapeHtml(alt)}">`;
+}
+
+function pendingTwitchBadgeImage(type, version) {
+  const key = `${type}/${version}`;
+  return `<img class="badge twitch-badge-pending" data-twitch-badge-key="${escapeHtml(key)}" alt="">`;
+}
+
+function buildTwitchBadgesHtml(tags) {
+  if (!SHOW_BADGES || !tags.badges) return "";
+
+  const badges = new Map();
+  tags.badges.split(",").forEach(badge => {
+    const [type, version = "0"] = badge.split("/");
+    if (type) badges.set(type, version);
+  });
+
+  let roleBadgeHtml = "";
+  const rolePriority = [
+    "broadcaster",
+    "lead_moderator",
+    "moderator",
+    "vip",
+    "artist-badge",
+    "staff",
+    "admin",
+    "global_mod"
+  ];
+
+  for (const type of rolePriority) {
+    if (!badges.has(type)) continue;
+
+    const version = badges.get(type);
+    const dynamicBadge = twitchBadgeMap[`${type}/${version}`];
+    if (dynamicBadge) {
+      roleBadgeHtml = twitchBadgeImage(dynamicBadge.imageUrl, dynamicBadge.title);
+    } else if (type === "lead_moderator") {
+      roleBadgeHtml = twitchBadgeImage("img/twitch_lead_mod.png", "Lead Moderator");
+    } else if (type === "moderator") {
+      roleBadgeHtml = twitchBadgeImage("img/twitch_mod.png", "Moderator");
+    } else if (type === "vip") {
+      roleBadgeHtml = twitchBadgeImage("img/twitch_vip.png", "VIP");
+    } else {
+      roleBadgeHtml = pendingTwitchBadgeImage(type, version);
+    }
+    break;
+  }
+
+  let subBadgeHtml = "";
+  if (!HIDE_SUB_BADGES) {
+    const subType = badges.has("founder") ? "founder" : badges.has("subscriber") ? "subscriber" : "";
+    if (subType) {
+      const version = badges.get(subType);
+      const dynamicBadge = twitchBadgeMap[`${subType}/${version}`];
+      if (dynamicBadge) {
+        subBadgeHtml = twitchBadgeImage(dynamicBadge.imageUrl, dynamicBadge.title);
+      } else {
+        subBadgeHtml = pendingTwitchBadgeImage(subType, version);
+      }
+    }
+  }
+
+  let globalBadgeHtml = "";
+  if (!HIDE_GLOBAL_BADGE) {
+    const reservedTypes = new Set([...rolePriority, "subscriber", "founder"]);
+    for (const [type, version] of badges) {
+      if (reservedTypes.has(type)) continue;
+
+      const dynamicBadge = twitchBadgeMap[`${type}/${version}`];
+      if (dynamicBadge) {
+        globalBadgeHtml = twitchBadgeImage(dynamicBadge.imageUrl, dynamicBadge.title);
+      } else {
+        globalBadgeHtml = pendingTwitchBadgeImage(type, version);
+      }
+      break;
+    }
+  }
+
+  return roleBadgeHtml + subBadgeHtml + globalBadgeHtml;
+}
+
 function addMessage(user, text, platform, twitchEmotes = null, nameColor = "#fff", badgesHtml = "", msgId = null) {
   // --- Filter: blockierte User ---
-  if (CONFIG.BLOCKED_USERS && CONFIG.BLOCKED_USERS.map(u => u.toLowerCase()).includes(user.toLowerCase())) {
+  if (OVERLAY_CONFIG.BLOCKED_USERS && OVERLAY_CONFIG.BLOCKED_USERS.map(u => u.toLowerCase()).includes(user.toLowerCase())) {
     return;
   }
 
   // --- Filter: Commands blockieren ---
   // 1) Alle Nachrichten blocken, die mit "!" beginnen
-  if (CONFIG.BLOCK_ALL_PREFIX_COMMANDS && text && text.trim().startsWith("!")) {
+  if (OVERLAY_CONFIG.BLOCK_ALL_PREFIX_COMMANDS && text && text.trim().startsWith("!")) {
     return;
   }
 
   // 2) Einzelne Commands blockieren
-  if (CONFIG.BLOCKED_COMMANDS && text) {
+  if (OVERLAY_CONFIG.BLOCKED_COMMANDS && text) {
     const lowered = text.toLowerCase().trim();
-    for (const cmd of CONFIG.BLOCKED_COMMANDS) {
+    for (const cmd of OVERLAY_CONFIG.BLOCKED_COMMANDS) {
       if (lowered.startsWith(cmd.toLowerCase())) {
         return;
       }
@@ -209,7 +399,7 @@ function addMessage(user, text, platform, twitchEmotes = null, nameColor = "#fff
   }
 
   // ✅ --- Filter: Links blockieren ---
-  if (CONFIG.BLOCK_LINKS && text && /(https?:\/\/|www\.)/i.test(text)) {
+  if (OVERLAY_CONFIG.BLOCK_LINKS && text && /(https?:\/\/|www\.)/i.test(text)) {
     return;
   }
 
@@ -231,9 +421,13 @@ if (msgId) {
     renderedText = text;
   }
 
+  const platformIconHtml = HIDE_PLATFORM
+    ? ""
+    : `<img class="platform-icon" src="img/${icon}" alt="${platform}">`;
+
   el.innerHTML =
-  `<img class="platform-icon" src="img/${icon}">
-   ${CONFIG.SHOW_BADGES ? badgesHtml : ""}
+  `${platformIconHtml}
+   ${SHOW_BADGES ? badgesHtml : ""}
    <span class="username" style="color:${nameColor}">${escapeHtml(user)}:</span>
    ${renderedText}`;
 
@@ -249,12 +443,16 @@ if (msgId) {
 // ===== Twitch verbinden =====
 function connectTwitch() {
   const ws = new WebSocket("wss://irc-ws.chat.twitch.tv:443");
+  const nickname = TWITCH_OAUTH
+    ? TWITCH_USERNAME
+    : `justinfan${Math.floor(Math.random() * 900000 + 100000)}`;
+
   ws.onopen = () => {
     ws.send("CAP REQ :twitch.tv/tags twitch.tv/commands twitch.tv/membership");
-    ws.send(`PASS ${TWITCH_OAUTH}`);
-    ws.send(`NICK ${TWITCH_CHANNEL}`);
+    ws.send(`PASS ${TWITCH_OAUTH || "SCHMOOPIIE"}`);
+    ws.send(`NICK ${nickname}`);
     ws.send(`JOIN #${TWITCH_CHANNEL}`);
-    console.log("[Twitch] Verbunden");
+    console.log(`[Twitch] Verbunden (${TWITCH_OAUTH ? "OAuth" : "anonym"})`);
   };
   
     ws.onmessage = (event) => {
@@ -270,20 +468,20 @@ function connectTwitch() {
 
       // CLEARMSG (einzelne Nachricht gelöscht)
       if (msg.includes("CLEARMSG")) {
-        const tagsRaw = msg.startsWith("@") ? msg.split(" ")[0] : "";
-        const tags = {};
-        if (tagsRaw) {
-          tagsRaw.substring(1).split(";").forEach(t => {
-            const [k, v] = t.split("=");
-            tags[k] = v ?? "";
-          });
-        }
+        const tags = parseTwitchTags(msg);
 
         const targetMsgId = tags["target-msg-id"];
         if (targetMsgId) {
           const el = document.querySelector(`[data-msg-id="${targetMsgId}"]`);
           if (el) el.remove();
         }
+        continue;
+      }
+
+      // ROOMSTATE liefert die Twitch-Kanal-ID für den Badge-Katalog.
+      if (msg.includes("ROOMSTATE")) {
+        const tags = parseTwitchTags(msg);
+        if (tags["room-id"]) loadTwitchBadges(tags["room-id"]);
         continue;
       }
 
@@ -303,14 +501,8 @@ function connectTwitch() {
 
       // PRIVMSG (normale Nachricht)
       if (msg.includes("PRIVMSG")) {
-        const tagsRaw = msg.startsWith("@") ? msg.split(" ")[0] : "";
-        const tags = {};
-        if (tagsRaw) {
-          tagsRaw.substring(1).split(";").forEach(t => {
-            const [k, v] = t.split("=");
-            tags[k] = v ?? "";
-          });
-        }
+        const tags = parseTwitchTags(msg);
+        if (tags["room-id"]) loadTwitchBadges(tags["room-id"]);
 
         const user = tags["display-name"] || msg.split("!")[0].substring(1);
         const text = msg.split("PRIVMSG")[1].split(" :")[1] ?? "";
@@ -325,19 +517,7 @@ function connectTwitch() {
           });
         }
 
-        let badgesHtml = "";
-        if (CONFIG.SHOW_BADGES && tags["badges"]) {
-          tags["badges"].split(",").forEach(b => {
-            const [type] = b.split("/");
-            if (type === "lead_moderator") {
-              badgesHtml += `<img class="badge" src="img/twitch_lead_mod.png" style="height:18px;margin-right:4px">`;
-            } else if (type === "moderator") {
-              badgesHtml += `<img class="badge" src="img/twitch_mod.png" style="height:18px;margin-right:4px">`;
-            } else if (type === "vip") {
-              badgesHtml += `<img class="badge" src="img/twitch_vip.png" style="height:18px;margin-right:4px">`;
-            }
-          });
-        }
+        const badgesHtml = buildTwitchBadgesHtml(tags);
 
         addMessage(user, text, "Twitch", twitchEmotes, tags["color"] || "#fff", badgesHtml, msgId);
       }
@@ -377,7 +557,7 @@ function connectKick() {
 
         // Kick-Badges
         let badgesHtml = "";
-        if (CONFIG.SHOW_BADGES) {
+        if (SHOW_BADGES) {
           (inner.sender.identity?.badges || []).forEach(b => {
             if (b.type === "moderator") {
               badgesHtml += `<img class="badge" src="img/kick_mod.svg" alt="mod" style="height:18px;vertical-align:middle;margin-right:4px">`;
@@ -400,12 +580,22 @@ function connectKick() {
 
 // ===== Start =====
 (async () => {
-  await load7TVUser();
+  if (SEVENTV_USER_ID) await load7TVUser();
   await load7TVGlobal();
   await loadBTTVGlobal();
-  await loadBTTVChannel(BTTV_TWITCH_USER_ID);
+  if (BTTV_TWITCH_USER_ID) await loadBTTVChannel(BTTV_TWITCH_USER_ID);
   await loadFFZGlobal();
-  await loadFFZChannel(CONFIG.FFZ_CHANNEL);
-  connectTwitch();
-  connectKick();
+  if (FFZ_CHANNEL) await loadFFZChannel(FFZ_CHANNEL);
+
+  if (TWITCH_CHANNEL) {
+    connectTwitch();
+  } else {
+    console.warn("[Twitch] Kein Kanal konfiguriert");
+  }
+
+  if (KICK_CHATROOM_ID) {
+    connectKick();
+  } else {
+    console.warn("[Kick] Keine Chatroom-ID konfiguriert");
+  }
 })();

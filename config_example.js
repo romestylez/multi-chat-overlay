@@ -2,11 +2,13 @@
 window.CONFIG = {
   // Twitch
   TWITCH_CHANNEL: "example_channel",
-  TWITCH_OAUTH: "oauth:xxxxxxxxxxxxxxxxxxxxxxxxxxxx", // Token from https://antiscuff.com/oauth/
+
+  // Optional authenticated Twitch login. Anonymous read-only mode is used when empty.
+  TWITCH_USERNAME: "",
+  TWITCH_OAUTH: "",
 
   // Kick
-  KICK_APP_KEY: "xxxxxxxxxxxxxxxxxxxx",
-  KICK_CLUSTER: "us2",
+  KICK_CHANNEL: "example_channel",
   KICK_CHATROOM_ID: 123456,
 
   // 7TV
@@ -21,8 +23,11 @@ window.CONFIG = {
   // Maximum number of messages visible at once
   MAX_MESSAGES: 20,
 
-  // Show badges or not
-  SHOW_BADGES: true,
+  // Hide all badges, only subscriber/founder badges, or platform icons
+  HIDE_BADGES: false,
+  HIDE_SUB_BADGES: false,
+  HIDE_GLOBAL_BADGE: false,
+  HIDE_PLATFORM: false,
 
   // Blacklist: users whose messages should be ignored
   BLOCKED_USERS: ["examplebot1", "examplebot2", "examplebot3"],

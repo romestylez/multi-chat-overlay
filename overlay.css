@@ -46,6 +46,10 @@ body {
     margin-right: 2px;
 }
 
+.twitch-badge-pending {
+    display: none;
+}
+
 .username {
     font-weight: bold;
     margin-right: 2px;
