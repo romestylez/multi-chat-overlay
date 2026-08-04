@@ -41,6 +41,7 @@
     : {};
   const values = { ...defaults, ...loadedConfig };
   let configFileHandle = null;
+  let kickChannelForChatroomId = "";
 
   const elements = {
     form: document.getElementById("config-form"),
@@ -149,6 +150,9 @@
     elements.twitchChannel.value = values.TWITCH_CHANNEL || "";
     elements.kickChannel.value = values.KICK_CHANNEL || "";
     elements.kickChatroomId.value = values.KICK_CHATROOM_ID || "";
+    kickChannelForChatroomId = Number(values.KICK_CHATROOM_ID) > 0
+      ? normalizeChannel(values.KICK_CHANNEL, "kick")
+      : "";
     elements.enable7TV.checked = values.ENABLE_7TV !== false;
     elements.enableBTTV.checked = values.ENABLE_BTTV !== false;
     elements.enableFFZ.checked = values.ENABLE_FFZ !== false;
@@ -192,6 +196,7 @@
 
     elements.kickChatroomId.value = String(chatroomId);
     if (data.slug) elements.kickChannel.value = String(data.slug).toLowerCase();
+    kickChannelForChatroomId = normalizeChannel(elements.kickChannel.value, "kick");
     setKickStatus(`Chatroom-ID ${chatroomId} wurde übernommen.`, "success");
     return chatroomId;
   }
@@ -201,26 +206,52 @@
     if (!channel) {
       setKickStatus("Bitte zuerst einen Kick-Kanal eingeben.", "error");
       elements.kickChannel.focus();
-      return;
+      return 0;
     }
 
     elements.kickChannel.value = channel;
     setKickStatus("Kick-Chatroom-ID wird geladen …", "working");
     elements.resolveKick.disabled = true;
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 10000);
 
     try {
       const response = await fetch(`https://kick.com/api/v1/channels/${encodeURIComponent(channel)}`, {
         headers: { Accept: "application/json" },
-        credentials: "omit"
+        credentials: "omit",
+        referrerPolicy: "no-referrer",
+        signal: controller.signal
       });
 
       if (!response.ok) throw new Error(`Kick antwortet mit HTTP ${response.status}.`);
-      readKickResponse(await response.json());
+      return readKickResponse(await response.json());
     } catch (error) {
-      setKickStatus("Die automatische Abfrage wurde blockiert. Bitte die Chatroom-ID manuell eintragen.", "error");
+      const message = error?.name === "AbortError"
+        ? "Kick hat zu lange nicht geantwortet. Bitte die Chatroom-ID manuell eintragen."
+        : "Die automatische Abfrage wurde blockiert. Bitte die Chatroom-ID manuell eintragen.";
+      setKickStatus(message, "error");
       console.warn("[Config Editor] Kick lookup failed:", error);
+      return 0;
     } finally {
+      window.clearTimeout(timeoutId);
       elements.resolveKick.disabled = false;
+    }
+  }
+
+  async function ensureKickChatroomId() {
+    const channel = normalizeChannel(elements.kickChannel.value, "kick");
+    elements.kickChannel.value = channel;
+    if (!channel) return;
+    if (!/^[a-z0-9_-]{1,80}$/.test(channel)) {
+      throw new Error("Der Kick-Kanal enthält ungültige Zeichen.");
+    }
+
+    const chatroomId = Number(elements.kickChatroomId.value);
+    if (Number.isInteger(chatroomId) && chatroomId > 0 && kickChannelForChatroomId === channel) return;
+
+    const resolvedId = await resolveKickChatroom();
+    if (!resolvedId) {
+      throw new Error("Die Kick-Chatroom-ID konnte nicht automatisch ermittelt werden. Trage sie bitte manuell ein.");
     }
   }
 
@@ -299,6 +330,7 @@
   }
 
   async function saveLocalConfig() {
+    await ensureKickChatroomId();
     const text = serializeConfig(buildConfig());
 
     if (!("showSaveFilePicker" in window) || !window.isSecureContext) {
@@ -340,8 +372,9 @@
     }
   }
 
-  function forceDownload() {
+  async function forceDownload() {
     try {
+      await ensureKickChatroomId();
       downloadConfig(serializeConfig(buildConfig()));
       setSaveStatus("config.js wurde heruntergeladen.", "success");
       elements.saveHint.textContent = "Verschiebe die Datei neben config.html und lade den Editor danach neu.";
@@ -352,7 +385,7 @@
 
   elements.form.addEventListener("submit", handleSubmit);
   elements.downloadConfig.addEventListener("click", forceDownload);
-  elements.resolveKick.addEventListener("click", resolveKickChatroom);
+  elements.resolveKick.addEventListener("click", () => void resolveKickChatroom());
   elements.blockPrefixCommands.addEventListener("change", syncBlockedCommandsAvailability);
   bindColorInputs(elements.twitchMessageColor, elements.twitchMessageColorHex);
   bindColorInputs(elements.kickMessageColor, elements.kickMessageColorHex);
@@ -361,6 +394,19 @@
   });
   elements.kickChannel.addEventListener("blur", () => {
     elements.kickChannel.value = normalizeChannel(elements.kickChannel.value, "kick");
+  });
+  elements.kickChannel.addEventListener("input", () => {
+    const channel = normalizeChannel(elements.kickChannel.value, "kick");
+    if (Number(elements.kickChatroomId.value) > 0 && kickChannelForChatroomId && channel !== kickChannelForChatroomId) {
+      elements.kickChatroomId.value = "";
+      kickChannelForChatroomId = "";
+      setKickStatus("Kanal geändert – die Chatroom-ID wird beim Speichern neu ermittelt.", "neutral");
+    }
+  });
+  elements.kickChatroomId.addEventListener("input", () => {
+    kickChannelForChatroomId = Number(elements.kickChatroomId.value) > 0
+      ? normalizeChannel(elements.kickChannel.value, "kick")
+      : "";
   });
 
   applyMode();
