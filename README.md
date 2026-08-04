@@ -1,6 +1,6 @@
 # Multi Chat Overlay
 
-A local and optionally hosted OBS browser-source overlay that combines Twitch and Kick chat in one view. The hosted variant additionally supports YouTube Live Chat. It supports native platform emotes, 7TV, BetterTTV, FrankerFaceZ, moderation filters, role badges and channel-specific subscriber/member badges.
+A local and optionally hosted OBS browser-source overlay that combines Twitch, Kick and YouTube Live Chat in one view. YouTube is available in the hosted variant. The overlay supports native platform emotes, 7TV, BetterTTV, FrankerFaceZ, moderation filters, role badges and channel-specific subscriber/member badges.
 
 The local variant uses `config.js`. The hosted variant stores the complete configuration inside the generated OBS URL. Neither variant requires an account, a database, configuration storage or `localStorage`. Hosted YouTube support uses the bundled, narrowly scoped PHP proxy because browsers cannot call YouTube's internal chat endpoints directly across origins.
 
@@ -8,8 +8,8 @@ The local variant uses `config.js`. The hosted variant stores the complete confi
 
 ### Chat platforms
 
-- Display Twitch and Kick messages in one overlay
-- Display YouTube Live Chat in the hosted overlay by entering the channel handle once
+- Display Twitch, Kick and YouTube Live Chat in one overlay (YouTube is hosted-only)
+- Connect to YouTube by entering the channel handle once
 - Find the currently running and future YouTube livestreams automatically
 - Read Twitch chat anonymously with only a channel name
 - Resolve the Kick chatroom ID automatically from a Kick channel name
