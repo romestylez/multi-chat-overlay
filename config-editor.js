@@ -226,6 +226,7 @@
       : 0;
     elements.kickChatroomId.value = kickChatroomIdValue || "";
     elements.kickManualFallback.hidden = true;
+    elements.resolveKick.hidden = true;
     kickChannelForChatroomId = kickChatroomIdValue > 0
       ? normalizeChannel(values.KICK_CHANNEL, "kick")
       : "";
@@ -282,6 +283,7 @@
     kickChatroomIdValue = chatroomId;
     elements.kickChatroomId.value = String(chatroomId);
     elements.kickManualFallback.hidden = true;
+    elements.resolveKick.hidden = true;
     if (data.slug) elements.kickChannel.value = String(data.slug).toLowerCase();
     kickChannelForChatroomId = normalizeChannel(elements.kickChannel.value, "kick");
     setKickStatus(`Chatroom-ID ${chatroomId} wurde übernommen.`, "success");
@@ -318,6 +320,7 @@
         : "Die automatische Abfrage ist fehlgeschlagen. Versuche es bitte erneut.";
       setKickStatus(message, "error");
       elements.kickManualFallback.hidden = false;
+      elements.resolveKick.hidden = false;
       console.warn("[Config Editor] Kick lookup failed:", error);
       return 0;
     } finally {
@@ -514,10 +517,19 @@
   });
   elements.kickChannel.addEventListener("input", () => {
     const channel = normalizeChannel(elements.kickChannel.value, "kick");
+    if (!elements.kickManualFallback.hidden || !elements.resolveKick.hidden) {
+      kickChatroomIdValue = 0;
+      kickChannelForChatroomId = "";
+      elements.kickChatroomId.value = "";
+      elements.kickManualFallback.hidden = true;
+      elements.resolveKick.hidden = true;
+      setKickStatus("", "neutral");
+    }
     if (kickChatroomIdValue > 0 && kickChannelForChatroomId && channel !== kickChannelForChatroomId) {
       kickChatroomIdValue = 0;
       elements.kickChatroomId.value = "";
       elements.kickManualFallback.hidden = true;
+      elements.resolveKick.hidden = true;
       kickChannelForChatroomId = "";
       setKickStatus("Kanal geändert – die Chatroom-ID wird beim Speichern neu ermittelt.", "neutral");
     }

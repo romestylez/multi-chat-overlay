@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark">
   <title>Multi Chat Overlay – Konfiguration</title>
   <link rel="icon" href="favicon.ico" sizes="any">
-  <link rel="stylesheet" href="config-editor.css?v=20260804-5">
+  <link rel="stylesheet" href="config-editor.css?v=20260804-7">
 </head>
 <body>
   <div class="page-shell">
@@ -63,7 +63,7 @@
               <span>Kick-Kanal</span>
               <div class="input-action-row">
                 <input id="kick-channel" name="kick-channel" type="text" autocomplete="off" placeholder="z. B. romestylez">
-                <button id="resolve-kick" class="button button-secondary" type="button">ID ermitteln</button>
+                <button id="resolve-kick" class="button button-secondary" type="button" hidden>ID ermitteln</button>
               </div>
             </label>
 
@@ -190,7 +190,7 @@
                 </div>
               </div>
             </div>
-            <label class="switch-row">
+            <label class="switch-row text-shadow-row">
               <input id="enable-text-shadow" type="checkbox">
               <span class="switch" aria-hidden="true"></span>
               <span>
@@ -241,7 +241,7 @@
               </div>
             </div>
 
-            <div class="switch-grid">
+            <div class="switch-grid badge-switch-grid">
             <label class="switch-row">
               <input id="hide-badges" type="checkbox">
               <span class="switch" aria-hidden="true"></span>

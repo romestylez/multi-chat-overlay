@@ -162,7 +162,7 @@ The badge switches behave as follows:
 
 ## Kick
 
-Enter a Kick channel name. When **config.js speichern**, **config.js herunterladen** or **Overlay-Link erzeugen** is clicked, the corresponding chatroom ID is resolved automatically. The separate **ID ermitteln** button remains available for checking it immediately. The manual ID field stays hidden unless the automatic request fails. The editor requests:
+Enter a Kick channel name. When **config.js speichern**, **config.js herunterladen** or **Overlay-Link erzeugen** is clicked, the corresponding chatroom ID is resolved automatically. The manual ID field and the separate **ID ermitteln** retry button stay hidden unless the automatic request fails. The editor requests:
 
 ```text
 https://kick.com/api/v1/channels/YOUR_CHANNEL
