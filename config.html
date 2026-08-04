@@ -73,16 +73,22 @@
               </div>
             </div>
 
-            <div class="field-grid">
-              <label class="field">
-                <span>7TV User-ID</span>
-                <input id="seventv-user-id" type="text" autocomplete="off" placeholder="Optional">
-              </label>
-              <label class="field">
-                <span>BTTV Twitch User-ID</span>
-                <input id="bttv-user-id" type="text" autocomplete="off" placeholder="Optional">
-              </label>
-            </div>
+            <label class="switch-row">
+              <input id="enable-7tv" type="checkbox">
+              <span class="switch" aria-hidden="true"></span>
+              <span>
+                <strong>7TV verwenden</strong>
+                <small>Lädt globale und kanalbezogene 7TV-Emotes automatisch.</small>
+              </span>
+            </label>
+            <label class="switch-row">
+              <input id="enable-bttv" type="checkbox">
+              <span class="switch" aria-hidden="true"></span>
+              <span>
+                <strong>BetterTTV verwenden</strong>
+                <small>Lädt globale und kanalbezogene BetterTTV-Emotes automatisch.</small>
+              </span>
+            </label>
             <label class="field">
               <span>FFZ-Kanal</span>
               <input id="ffz-channel" type="text" autocomplete="off" placeholder="Leer = Twitch-Kanal verwenden">

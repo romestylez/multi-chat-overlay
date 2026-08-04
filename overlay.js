@@ -12,6 +12,8 @@ const KICK_CHATROOM_ID     = Number(OVERLAY_CONFIG.KICK_CHATROOM_ID) || 0;
 const SEVENTV_USER_ID      = OVERLAY_CONFIG.SEVENTV_USER_ID || "";
 const BTTV_TWITCH_USER_ID  = OVERLAY_CONFIG.BTTV_TWITCH_USER_ID || "";
 const FFZ_CHANNEL          = OVERLAY_CONFIG.FFZ_CHANNEL || TWITCH_CHANNEL;
+const ENABLE_7TV           = OVERLAY_CONFIG.ENABLE_7TV !== false;
+const ENABLE_BTTV          = OVERLAY_CONFIG.ENABLE_BTTV !== false;
 
 // ====== Anzeige ======
 const configuredMaxMessages = Number(OVERLAY_CONFIG.MAX_MESSAGES);
@@ -33,6 +35,10 @@ let twitchEmoteCache = {};
 let twitchBadgeMap = {};
 let twitchBadgeRoomId = "";
 let twitchBadgeLoadPromise = null;
+let sevenTvTwitchUserId = "";
+let sevenTvChannelLoadPromise = null;
+let bttvTwitchUserId = "";
+let bttvChannelLoadPromise = null;
 
 // ===== Twitch-Badges laden =====
 function resolvePendingTwitchBadges() {
@@ -110,19 +116,46 @@ async function loadTwitchBadges(roomId) {
 }
 
 // ===== 7TV laden =====
+function index7TVEmotes(emotes, label) {
+  if (!Array.isArray(emotes)) return;
+
+  emotes.forEach(e => {
+    emoteMap[e.name] = `https:${e.data.host.url}/4x.webp`;
+  });
+  console.log(`[7TV] ${label} geladen:`, emotes.length);
+}
+
 async function load7TVUser() {
   try {
     const res = await fetch(`https://7tv.io/v3/users/${SEVENTV_USER_ID}`);
     const data = await res.json();
-    if (data?.connections?.[0]?.emote_set?.emotes) {
-      data.connections[0].emote_set.emotes.forEach(e => {
-        emoteMap[e.name] = `https:${e.data.host.url}/4x.webp`;
-      });
-      console.log("[7TV] User-Set geladen:", data.connections[0].emote_set.emotes.length);
-    }
+    index7TVEmotes(data?.connections?.[0]?.emote_set?.emotes, "Manuelles User-Set");
   } catch (err) {
     console.warn("[7TV] Fehler User-Set:", err);
   }
+}
+
+async function load7TVTwitchUser(twitchUserId) {
+  const normalizedUserId = String(twitchUserId || "").trim();
+  if (!normalizedUserId) return;
+  if (sevenTvTwitchUserId === normalizedUserId && sevenTvChannelLoadPromise) {
+    return sevenTvChannelLoadPromise;
+  }
+
+  sevenTvTwitchUserId = normalizedUserId;
+  sevenTvChannelLoadPromise = (async () => {
+    try {
+      const res = await fetch(`https://7tv.io/v3/users/twitch/${encodeURIComponent(normalizedUserId)}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const data = await res.json();
+      index7TVEmotes(data?.emote_set?.emotes, "Channel-Emotes");
+    } catch (err) {
+      console.warn("[7TV] Fehler Channel:", err);
+    }
+  })();
+
+  return sevenTvChannelLoadPromise;
 }
 
 async function load7TVGlobal() {
@@ -155,19 +188,37 @@ async function loadBTTVGlobal() {
 }
 
 async function loadBTTVChannel(twitchUserId) {
-  try {
-    const res = await fetch(`https://api.betterttv.net/3/cached/users/twitch/${twitchUserId}`);
-    const data = await res.json();
-    (data.channelEmotes || []).forEach(e => {
-      emoteMap[e.code] = `https://cdn.betterttv.net/emote/${e.id}/3x`;
-    });
-    (data.sharedEmotes || []).forEach(e => {
-      emoteMap[e.code] = `https://cdn.betterttv.net/emote/${e.id}/3x`;
-    });
-    console.log("[BTTV] Channel-Emotes geladen");
-  } catch (err) {
-    console.warn("[BTTV] Fehler Channel:", err);
+  const normalizedUserId = String(twitchUserId || "").trim();
+  if (!normalizedUserId) return;
+  if (bttvTwitchUserId === normalizedUserId && bttvChannelLoadPromise) {
+    return bttvChannelLoadPromise;
   }
+
+  bttvTwitchUserId = normalizedUserId;
+  bttvChannelLoadPromise = (async () => {
+    try {
+      const res = await fetch(`https://api.betterttv.net/3/cached/users/twitch/${encodeURIComponent(normalizedUserId)}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const data = await res.json();
+      (data.channelEmotes || []).forEach(e => {
+        emoteMap[e.code] = `https://cdn.betterttv.net/emote/${e.id}/3x`;
+      });
+      (data.sharedEmotes || []).forEach(e => {
+        emoteMap[e.code] = `https://cdn.betterttv.net/emote/${e.id}/3x`;
+      });
+      console.log("[BTTV] Channel-Emotes geladen");
+    } catch (err) {
+      console.warn("[BTTV] Fehler Channel:", err);
+    }
+  })();
+
+  return bttvChannelLoadPromise;
+}
+
+function loadAutomaticTwitchChannelEmotes(roomId) {
+  if (ENABLE_7TV && !SEVENTV_USER_ID) load7TVTwitchUser(roomId);
+  if (ENABLE_BTTV && !BTTV_TWITCH_USER_ID) loadBTTVChannel(roomId);
 }
 
 // ===== FFZ laden =====
@@ -481,7 +532,10 @@ function connectTwitch() {
       // ROOMSTATE liefert die Twitch-Kanal-ID für den Badge-Katalog.
       if (msg.includes("ROOMSTATE")) {
         const tags = parseTwitchTags(msg);
-        if (tags["room-id"]) loadTwitchBadges(tags["room-id"]);
+        if (tags["room-id"]) {
+          loadTwitchBadges(tags["room-id"]);
+          loadAutomaticTwitchChannelEmotes(tags["room-id"]);
+        }
         continue;
       }
 
@@ -502,7 +556,10 @@ function connectTwitch() {
       // PRIVMSG (normale Nachricht)
       if (msg.includes("PRIVMSG")) {
         const tags = parseTwitchTags(msg);
-        if (tags["room-id"]) loadTwitchBadges(tags["room-id"]);
+        if (tags["room-id"]) {
+          loadTwitchBadges(tags["room-id"]);
+          loadAutomaticTwitchChannelEmotes(tags["room-id"]);
+        }
 
         const user = tags["display-name"] || msg.split("!")[0].substring(1);
         const text = msg.split("PRIVMSG")[1].split(" :")[1] ?? "";
@@ -580,10 +637,14 @@ function connectKick() {
 
 // ===== Start =====
 (async () => {
-  if (SEVENTV_USER_ID) await load7TVUser();
-  await load7TVGlobal();
-  await loadBTTVGlobal();
-  if (BTTV_TWITCH_USER_ID) await loadBTTVChannel(BTTV_TWITCH_USER_ID);
+  if (ENABLE_7TV) {
+    if (SEVENTV_USER_ID) await load7TVUser();
+    await load7TVGlobal();
+  }
+  if (ENABLE_BTTV) {
+    await loadBTTVGlobal();
+    if (BTTV_TWITCH_USER_ID) await loadBTTVChannel(BTTV_TWITCH_USER_ID);
+  }
   await loadFFZGlobal();
   if (FFZ_CHANNEL) await loadFFZChannel(FFZ_CHANNEL);
 

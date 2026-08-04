@@ -11,11 +11,9 @@ window.CONFIG = {
   KICK_CHANNEL: "example_channel",
   KICK_CHATROOM_ID: 123456,
 
-  // 7TV
-  SEVENTV_USER_ID: "XXXXXXXXXXXXXXXXX",
-
-  // BTTV
-  BTTV_TWITCH_USER_ID: "XXXXXXXX",
+  // Automatically load global and channel-specific emotes
+  ENABLE_7TV: true,
+  ENABLE_BTTV: true,
 
   // FFZ
   FFZ_CHANNEL: "example_channel",

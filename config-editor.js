@@ -9,8 +9,8 @@
     TWITCH_CHANNEL: "",
     KICK_CHANNEL: "",
     KICK_CHATROOM_ID: "",
-    SEVENTV_USER_ID: "",
-    BTTV_TWITCH_USER_ID: "",
+    ENABLE_7TV: true,
+    ENABLE_BTTV: true,
     FFZ_CHANNEL: "",
     MAX_MESSAGES: 20,
     HIDE_BADGES: false,
@@ -34,8 +34,8 @@
     kickChatroomId: document.getElementById("kick-chatroom-id"),
     resolveKick: document.getElementById("resolve-kick"),
     kickStatus: document.getElementById("kick-status"),
-    seventvUserId: document.getElementById("seventv-user-id"),
-    bttvUserId: document.getElementById("bttv-user-id"),
+    enable7TV: document.getElementById("enable-7tv"),
+    enableBTTV: document.getElementById("enable-bttv"),
     ffzChannel: document.getElementById("ffz-channel"),
     maxMessages: document.getElementById("max-messages"),
     hideBadges: document.getElementById("hide-badges"),
@@ -93,8 +93,8 @@
     elements.twitchChannel.value = values.TWITCH_CHANNEL || "";
     elements.kickChannel.value = values.KICK_CHANNEL || "";
     elements.kickChatroomId.value = values.KICK_CHATROOM_ID || "";
-    elements.seventvUserId.value = values.SEVENTV_USER_ID || "";
-    elements.bttvUserId.value = values.BTTV_TWITCH_USER_ID || "";
+    elements.enable7TV.checked = values.ENABLE_7TV !== false;
+    elements.enableBTTV.checked = values.ENABLE_BTTV !== false;
     elements.ffzChannel.value = values.FFZ_CHANNEL || "";
     elements.maxMessages.value = values.MAX_MESSAGES || 20;
     elements.hideBadges.checked = Object.prototype.hasOwnProperty.call(loadedConfig, "HIDE_BADGES")
@@ -187,8 +187,8 @@
       TWITCH_CHANNEL: twitchChannel,
       KICK_CHANNEL: kickChannel,
       KICK_CHATROOM_ID: Number.isInteger(kickChatroomId) && kickChatroomId > 0 ? kickChatroomId : 0,
-      SEVENTV_USER_ID: elements.seventvUserId.value.trim(),
-      BTTV_TWITCH_USER_ID: elements.bttvUserId.value.trim(),
+      ENABLE_7TV: elements.enable7TV.checked,
+      ENABLE_BTTV: elements.enableBTTV.checked,
       FFZ_CHANNEL: normalizeChannel(elements.ffzChannel.value, "twitch"),
       MAX_MESSAGES: maxMessages,
       HIDE_BADGES: elements.hideBadges.checked,
