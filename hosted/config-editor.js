@@ -28,7 +28,6 @@
 
   const elements = {
     form: document.getElementById("config-form"),
-    loadState: document.getElementById("load-state"),
     twitchChannel: document.getElementById("twitch-channel"),
     kickChannel: document.getElementById("kick-channel"),
     kickChatroomId: document.getElementById("kick-chatroom-id"),
@@ -119,11 +118,6 @@
     elements.saveStatus.className = `save-status${kind ? ` status-${kind}` : ""}`;
   }
 
-  function setLoadState(message, kind) {
-    elements.loadState.textContent = message;
-    elements.loadState.className = `state-pill${kind ? ` state-${kind}` : ""}`;
-  }
-
   function setDialogStatus(element, message, kind) {
     element.textContent = message;
     element.className = `dialog-status${kind ? ` status-${kind}` : ""}`;
@@ -181,11 +175,9 @@
     syncBlockedCommandsAvailability();
 
     if (source === "import") {
-      setLoadState("Link importiert", "success");
       setSaveStatus("Konfiguration wurde aus dem Overlay-Link geladen.", "success");
       elements.saveHint.textContent = "Nach Änderungen erzeugst du einen neuen Link und ersetzt ihn in OBS.";
     } else {
-      setLoadState("Online-Editor", "neutral");
       setSaveStatus("Noch kein Overlay-Link erzeugt.", "neutral");
       elements.saveHint.textContent = "Die Einstellungen werden nur im erzeugten Link gespeichert.";
     }
@@ -285,7 +277,6 @@
     showDialog(elements.linkDialog);
     elements.generatedOverlayUrl.focus();
     elements.generatedOverlayUrl.select();
-    setLoadState("Link bereit", "success");
     setSaveStatus("Overlay-Link wurde erzeugt.", "success");
     elements.saveHint.textContent = "Kopiere den neuen Link und ersetze damit die URL deiner OBS-Browserquelle.";
   }
