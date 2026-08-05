@@ -5,6 +5,11 @@ DirectoryIndex config.html
   Require all denied
 </Files>
 
+# Deployment-Dokumentation gehört nicht in die öffentliche Auslieferung.
+<FilesMatch "\.(md|txt)$">
+  Require all denied
+</FilesMatch>
+
 RewriteEngine On
 RewriteRule ^(config|chat)/$ $1 [R=302,L]
 RewriteRule ^config$ config.html [L]
