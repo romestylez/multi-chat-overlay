@@ -377,20 +377,43 @@ function escapeHtml(str) {
   );
 }
 
-function parseTwitchTags(message) {
-  const tagsRaw = message.startsWith("@") ? message.split(" ")[0] : "";
+function parseTwitchTags(rawTags) {
   const tags = {};
 
-  if (tagsRaw) {
-    tagsRaw.substring(1).split(";").forEach(tag => {
-      const separatorIndex = tag.indexOf("=");
-      const key = separatorIndex === -1 ? tag : tag.substring(0, separatorIndex);
-      const value = separatorIndex === -1 ? "" : tag.substring(separatorIndex + 1);
-      tags[key] = value;
-    });
-  }
+  String(rawTags || "").split(";").forEach(tag => {
+    if (!tag) return;
+    const separatorIndex = tag.indexOf("=");
+    const key = separatorIndex === -1 ? tag : tag.substring(0, separatorIndex);
+    const value = separatorIndex === -1 ? "" : tag.substring(separatorIndex + 1);
+    if (key) tags[key] = value;
+  });
 
   return tags;
+}
+
+// Zerlegt eine IRC-Zeile in "@tags :prefix COMMAND params :trailing". Das Kommando
+// darf nur aus diesem Feld gelesen werden: Nachrichtentexte, Anzeigenamen und Tags
+// wie reply-parent-msg-body enthalten beliebigen Text und dürfen kein Ereignis auslösen.
+const IRC_LINE_PATTERN = /^(?:@(\S*) )?(?::(\S*) )?([A-Za-z0-9]+)(?: (.*))?$/;
+
+function parseIrcLine(line) {
+  const match = IRC_LINE_PATTERN.exec(String(line || ""));
+  if (!match) return null;
+
+  const [, rawTags = "", prefix = "", command = "", rawParams = ""] = match;
+  const trailingIndex = rawParams.startsWith(":") ? 0 : rawParams.indexOf(" :");
+  const middle = trailingIndex === -1 ? rawParams : rawParams.slice(0, trailingIndex);
+  const trailing = trailingIndex === -1 ? "" : rawParams.slice(trailingIndex === 0 ? 1 : trailingIndex + 2);
+
+  return {
+    tags: parseTwitchTags(rawTags),
+    prefix,
+    command: command.toUpperCase(),
+    params: middle.trim() ? middle.trim().split(" ") : [],
+    trailing,
+    // Moderationsereignisse stammen immer vom Server, nie von einem Nutzer-Prefix.
+    fromServer: prefix === "tmi.twitch.tv"
+  };
 }
 
 function twitchBadgeImage(src, alt) {
@@ -560,29 +583,30 @@ function connectTwitch() {
     ws.onmessage = (event) => {
     const lines = event.data.trim().split("\r\n");
 
-    for (const msg of lines) {
+    for (const line of lines) {
+      const message = parseIrcLine(line);
+      if (!message) continue;
+      const tags = message.tags;
 
       // PING
-      if (msg.startsWith("PING")) {
+      if (message.command === "PING") {
         ws.send("PONG :tmi.twitch.tv");
         continue;
       }
 
       // CLEARMSG (einzelne Nachricht gelöscht)
-      if (msg.includes("CLEARMSG")) {
-        const tags = parseTwitchTags(msg);
-
+      if (message.command === "CLEARMSG" && message.fromServer) {
         const targetMsgId = tags["target-msg-id"];
         if (targetMsgId) {
-          const el = document.querySelector(`[data-msg-id="${targetMsgId}"]`);
+          const el = [...document.querySelectorAll("[data-msg-id]")]
+            .find(element => element.dataset.msgId === targetMsgId);
           if (el) el.remove();
         }
         continue;
       }
 
       // ROOMSTATE liefert die Twitch-Kanal-ID für den Badge-Katalog.
-      if (msg.includes("ROOMSTATE")) {
-        const tags = parseTwitchTags(msg);
+      if (message.command === "ROOMSTATE" && message.fromServer) {
         if (tags["room-id"]) {
           loadTwitchBadges(tags["room-id"]);
           loadAutomaticTwitchChannelEmotes(tags["room-id"]);
@@ -591,12 +615,12 @@ function connectTwitch() {
       }
 
       // CLEARCHAT (Ban / Timeout / /clear)
-      if (msg.includes("CLEARCHAT")) {
-        const parts = msg.split("CLEARCHAT")[1];
-        const username = parts?.split(" :")[1]?.trim();
+      if (message.command === "CLEARCHAT" && message.fromServer) {
+        const username = message.trailing.trim().toLowerCase();
 
         if (username) {
-          document.querySelectorAll(`[data-user="${username.toLowerCase()}"]`)
+          [...document.querySelectorAll("[data-user]")]
+            .filter(element => element.dataset.user === username)
             .forEach(el => el.remove());
         } else {
           chatBox.innerHTML = "";
@@ -605,15 +629,14 @@ function connectTwitch() {
       }
 
       // PRIVMSG (normale Nachricht)
-      if (msg.includes("PRIVMSG")) {
-        const tags = parseTwitchTags(msg);
+      if (message.command === "PRIVMSG") {
         if (tags["room-id"]) {
           loadTwitchBadges(tags["room-id"]);
           loadAutomaticTwitchChannelEmotes(tags["room-id"]);
         }
 
-        const user = tags["display-name"] || msg.split("!")[0].substring(1);
-        const text = msg.split("PRIVMSG")[1].split(" :")[1] ?? "";
+        const user = tags["display-name"] || message.prefix.split("!")[0];
+        const text = message.trailing;
         const msgId = tags["id"] || null;
 
         let twitchEmotes = null;
