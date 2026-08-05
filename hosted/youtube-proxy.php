@@ -46,7 +46,11 @@ function client_ip(): string
 {
     $remote = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
     if (($remote === '127.0.0.1' || $remote === '::1') && !empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-        $candidate = trim(explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'])[0]);
+        // Der lokale Reverse-Proxy hängt die echte Client-IP hinten an. Nur dieser
+        // letzte Eintrag ist vertrauenswürdig; alles davor hat der Client selbst
+        // geschickt und wäre sonst ein beliebig wählbarer Rate-Limit-Schlüssel.
+        $forwarded = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+        $candidate = trim(end($forwarded));
         if (filter_var($candidate, FILTER_VALIDATE_IP)) return $candidate;
     }
     return $remote;
