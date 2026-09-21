@@ -18,11 +18,11 @@ The local variant uses `config.js`. The hosted variant stores the complete confi
 
 ### Emotes and badges
 
-- Native Twitch and Kick emotes
-- Global and channel-specific 7TV emotes
-- Global and channel-specific BetterTTV emotes
-- Global and channel-specific FrankerFaceZ emotes
-- Automatic 7TV and BetterTTV channel lookup through the Twitch channel ID
+- Native Twitch, Kick and hosted YouTube emotes
+- Global and channel-specific 7TV emotes for Twitch, Kick and hosted YouTube
+- Global and channel-specific BetterTTV emotes for Twitch and hosted YouTube
+- Global and channel-specific FrankerFaceZ emotes for Twitch
+- Automatic provider lookup through the platform's Twitch, Kick or YouTube channel ID
 - Twitch broadcaster, moderator, VIP and other role badges
 - Channel-specific Twitch subscriber and founder badges
 - The global badge selected by each Twitch user
@@ -193,11 +193,11 @@ YouTube support is intentionally limited to the hosted variant. The local file-b
 
 7TV, BetterTTV and FrankerFaceZ can be enabled or disabled independently in the editor. When enabled, their global emotes are loaded automatically.
 
-For channel-specific emotes, the overlay reads the Twitch channel ID from IRC and uses it directly with the 7TV and BetterTTV APIs. FrankerFaceZ uses the configured Twitch channel name automatically. No separate emote-service IDs or channel names have to be entered.
+For channel-specific emotes, the overlay reads the Twitch channel ID from IRC and uses it directly with the 7TV and BetterTTV APIs. Kick uses the broadcaster ID returned by its channel API for 7TV. The hosted YouTube variant uses the channel ID returned by its existing discovery proxy for 7TV and BetterTTV. FrankerFaceZ uses the configured Twitch channel name automatically. No separate emote-service IDs or channel names have to be entered.
 
-- `ENABLE_7TV`: load global and channel-specific 7TV emotes
-- `ENABLE_BTTV`: load global and channel-specific BetterTTV emotes
-- `ENABLE_FFZ`: load global and channel-specific FrankerFaceZ emotes
+- `ENABLE_7TV`: load global and channel-specific 7TV emotes for Twitch, Kick and hosted YouTube
+- `ENABLE_BTTV`: load global and channel-specific BetterTTV emotes for Twitch and hosted YouTube
+- `ENABLE_FFZ`: load global and channel-specific FrankerFaceZ emotes for Twitch
 
 A failed optional emote request does not stop the remaining overlay services or chat connections.
 

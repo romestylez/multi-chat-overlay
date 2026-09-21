@@ -7,6 +7,7 @@ const TWITCH_USERNAME      = OVERLAY_CONFIG.TWITCH_USERNAME || TWITCH_CHANNEL;
 
 const KICK_APP_KEY         = OVERLAY_CONFIG.KICK_APP_KEY || "32cbd69e4b950bf97679";
 const KICK_CLUSTER         = OVERLAY_CONFIG.KICK_CLUSTER || "us2";
+const KICK_CHANNEL         = OVERLAY_CONFIG.KICK_CHANNEL || "";
 const KICK_CHATROOM_ID     = Number(OVERLAY_CONFIG.KICK_CHATROOM_ID) || 0;
 
 const SEVENTV_USER_ID      = OVERLAY_CONFIG.SEVENTV_USER_ID || "";
@@ -61,6 +62,7 @@ chatBox.style.fontSize = `${CHAT_FONT_SIZE}px`;
 chatBox.style.fontFamily = CHAT_FONT_FAMILY;
 chatBox.style.fontWeight = String(CHAT_FONT_WEIGHT);
 let emoteMap = {};
+let kickEmoteMap = {};
 let twitchEmoteCache = {};
 let twitchBadgeMap = {};
 let twitchBadgeRoomId = "";
@@ -146,11 +148,11 @@ async function loadTwitchBadges(roomId) {
 }
 
 // ===== 7TV laden =====
-function index7TVEmotes(emotes, label) {
+function index7TVEmotes(emotes, label, targetMap = emoteMap) {
   if (!Array.isArray(emotes)) return;
 
   emotes.forEach(e => {
-    emoteMap[e.name] = `https:${e.data.host.url}/4x.webp`;
+    targetMap[e.name] = `https:${e.data.host.url}/4x.webp`;
   });
   console.log(`[7TV] ${label} geladen:`, emotes.length);
 }
@@ -195,6 +197,7 @@ async function load7TVGlobal() {
     if (data?.emotes) {
       data.emotes.forEach(e => {
         emoteMap[e.name] = `https:${e.data.host.url}/4x.webp`;
+        kickEmoteMap[e.name] = `https:${e.data.host.url}/4x.webp`;
       });
       console.log("[7TV] Globale Emotes geladen:", data.emotes.length);
     }
@@ -244,6 +247,31 @@ async function loadBTTVChannel(twitchUserId) {
   })();
 
   return bttvChannelLoadPromise;
+}
+
+async function load7TVKickUser() {
+  let kickUserId = KICK_CHATROOM_ID;
+
+  if (KICK_CHANNEL) {
+    try {
+      const res = await fetch(`https://kick.com/api/v1/channels/${encodeURIComponent(KICK_CHANNEL)}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      kickUserId = data?.user_id || data?.broadcaster_user_id || kickUserId;
+    } catch (err) {
+      console.warn("[7TV] Kick-Broadcaster-ID konnte nicht geladen werden; Chatroom-ID wird versucht:", err);
+    }
+  }
+
+  if (!kickUserId) return;
+  try {
+    const res = await fetch(`https://7tv.io/v3/users/KICK/${encodeURIComponent(String(kickUserId))}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    index7TVEmotes(data?.emote_set?.emotes, "Kick-Channel-Emotes", kickEmoteMap);
+  } catch (err) {
+    console.warn("[7TV] Fehler Kick-Channel:", err);
+  }
 }
 
 function loadAutomaticTwitchChannelEmotes(roomId) {
@@ -335,12 +363,12 @@ function renderTextWithTwitch(text, twitchEmotes) {
   return renderText7TV_BTTV(text);
 }
 
-function renderText7TV_BTTV(text) {
+function renderText7TV_BTTV(text, providerMap = emoteMap) {
   if (!text) return "";
   const parts = text.split(/\s+/);
   return parts.map(part => {
-    if (emoteMap.hasOwnProperty(part)) {
-      return `<img class="emote" src="${emoteMap[part]}" alt="${part}">`;
+    if (Object.prototype.hasOwnProperty.call(providerMap, part)) {
+      return `<img class="emote" src="${providerMap[part]}" alt="${part}">`;
     }
     return escapeHtml(part);
   }).join(" ");
@@ -354,13 +382,13 @@ function renderKickText(text) {
   let match;
 
   while ((match = emotePattern.exec(content)) !== null) {
-    output += escapeHtml(content.slice(lastIndex, match.index));
+    output += renderText7TV_BTTV(content.slice(lastIndex, match.index), kickEmoteMap);
     const [, id, name] = match;
     output += `<img class="emote" src="https://files.kick.com/emotes/${id}/fullsize" alt="${escapeHtml(name)}">`;
     lastIndex = match.index + match[0].length;
   }
 
-  output += escapeHtml(content.slice(lastIndex));
+  output += renderText7TV_BTTV(content.slice(lastIndex), kickEmoteMap);
   return output;
 }
 
@@ -708,6 +736,7 @@ function connectKick() {
   if (ENABLE_7TV) {
     if (SEVENTV_USER_ID) await load7TVUser();
     await load7TVGlobal();
+    await load7TVKickUser();
   }
   if (ENABLE_BTTV) {
     await loadBTTVGlobal();
