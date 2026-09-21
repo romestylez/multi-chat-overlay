@@ -7,6 +7,7 @@ const TWITCH_USERNAME      = OVERLAY_CONFIG.TWITCH_USERNAME || TWITCH_CHANNEL;
 
 const KICK_APP_KEY         = OVERLAY_CONFIG.KICK_APP_KEY || "32cbd69e4b950bf97679";
 const KICK_CLUSTER         = OVERLAY_CONFIG.KICK_CLUSTER || "us2";
+const KICK_CHANNEL         = OVERLAY_CONFIG.KICK_CHANNEL || "";
 const KICK_CHATROOM_ID     = Number(OVERLAY_CONFIG.KICK_CHATROOM_ID) || 0;
 const YOUTUBE_CHANNEL      = OVERLAY_CONFIG.YOUTUBE_CHANNEL || "";
 
@@ -87,7 +88,11 @@ chatBox.style.fontSize = `${CHAT_FONT_SIZE}px`;
 chatBox.style.fontFamily = CHAT_FONT_FAMILY;
 chatBox.style.fontWeight = String(CHAT_FONT_WEIGHT);
 let emoteMap = Object.create(null);
+let kickEmoteMap = Object.create(null);
+let youtubeEmoteMap = Object.create(null);
 let emoteCount = 0;
+let kickEmoteCount = 0;
+let youtubeEmoteCount = 0;
 let twitchEmoteCache = Object.create(null);
 let twitchBadgeMap = Object.create(null);
 let twitchBadgeRoomId = "";
@@ -146,6 +151,23 @@ function registerEmote(name, imageUrl) {
     emoteCount++;
   }
   emoteMap[normalizedName] = normalizedUrl;
+  return true;
+}
+
+function registerPlatformEmote(targetMap, name, imageUrl, overwrite = true) {
+  const normalizedName = typeof name === "string" ? name.trim() : "";
+  const normalizedUrl = safeImageUrl(imageUrl);
+  if (!normalizedName || normalizedName.length > 100 || /\s|[\u0000-\u001F\u007F]/.test(normalizedName)) return false;
+  if (!normalizedUrl) return false;
+  if (!overwrite && hasOwn(targetMap, normalizedName)) return false;
+  if (!hasOwn(targetMap, normalizedName)) {
+    const count = targetMap === kickEmoteMap ? kickEmoteCount : youtubeEmoteCount;
+    if (count >= MAX_EMOTES) return false;
+    if (targetMap === kickEmoteMap) kickEmoteCount++;
+    else youtubeEmoteCount++;
+  }
+
+  targetMap[normalizedName] = normalizedUrl;
   return true;
 }
 
@@ -311,13 +333,21 @@ async function loadTwitchBadges(roomId) {
 }
 
 // ===== 7TV laden =====
-function index7TVEmotes(emotes, label) {
+function index7TVEmotes(emotes, label, targetMaps = [emoteMap], overwrite = true) {
   if (!Array.isArray(emotes)) return;
 
   let count = 0;
   emotes.slice(0, MAX_EMOTES).forEach(e => {
     const hostUrl = e?.data?.host?.url;
-    if (typeof hostUrl === "string" && hostUrl && registerEmote(e?.name, `https:${hostUrl}/4x.webp`)) count++;
+    if (typeof hostUrl !== "string" || !hostUrl) return;
+    const imageUrl = `https:${hostUrl}/4x.webp`;
+    let registered = false;
+    targetMaps.forEach(targetMap => {
+      registered = (targetMap === emoteMap
+        ? registerEmote(e?.name, imageUrl)
+        : registerPlatformEmote(targetMap, e?.name, imageUrl, overwrite)) || registered;
+    });
+    if (registered) count++;
   });
   console.log(`[7TV] ${label} geladen:`, count);
 }
@@ -354,10 +384,83 @@ async function load7TVTwitchUser(twitchUserId) {
 async function load7TVGlobal() {
   try {
     const data = await fetchJson("https://7tv.io/v3/emote-sets/global", "Globale 7TV-Emotes");
-    index7TVEmotes(data?.emotes, "Globale Emotes");
+    index7TVEmotes(data?.emotes, "Globale Emotes", [emoteMap, kickEmoteMap, youtubeEmoteMap], false);
   } catch (err) {
     console.warn("[7TV] Fehler Global:", err);
   }
+}
+
+async function load7TVKickUser() {
+  let kickUserId = KICK_CHATROOM_ID;
+
+  if (KICK_CHANNEL) {
+    try {
+      const data = await fetchJson(
+        `https://kick.com/api/v1/channels/${encodeURIComponent(KICK_CHANNEL)}`,
+        "Kick-Kanaldaten"
+      );
+      kickUserId = data?.user_id || data?.broadcaster_user_id || kickUserId;
+    } catch (err) {
+      console.warn("[7TV] Kick-Broadcaster-ID konnte nicht geladen werden; Chatroom-ID wird versucht:", err);
+    }
+  }
+
+  if (!kickUserId) return;
+  try {
+    const data = await fetchJson(
+      `https://7tv.io/v3/users/KICK/${encodeURIComponent(String(kickUserId))}`,
+      "7TV-Kick-Channel-Emotes"
+    );
+    index7TVEmotes(data?.emote_set?.emotes, "Kick-Channel-Emotes", [kickEmoteMap]);
+  } catch (err) {
+    console.warn("[7TV] Fehler Kick-Channel:", err);
+  }
+}
+
+async function loadYouTubeChannelEmotes(youtubeChannelId) {
+  const normalizedChannelId = String(youtubeChannelId || "").trim();
+  if (!normalizedChannelId) return;
+
+  const tasks = [];
+  if (ENABLE_7TV) {
+    tasks.push((async () => {
+      try {
+        const data = await fetchJson(
+          `https://7tv.io/v3/users/YOUTUBE/${encodeURIComponent(normalizedChannelId)}`,
+          "7TV-YouTube-Channel-Emotes"
+        );
+        index7TVEmotes(data?.emote_set?.emotes, "YouTube-Channel-Emotes", [youtubeEmoteMap]);
+      } catch (err) {
+        console.warn("[7TV] Fehler YouTube-Channel:", err);
+      }
+    })());
+  }
+  if (ENABLE_BTTV) {
+    tasks.push((async () => {
+      try {
+        const data = await fetchJson(
+          `https://api.betterttv.net/3/cached/users/youtube/${encodeURIComponent(normalizedChannelId)}`,
+          "BetterTTV-YouTube-Channel-Emotes"
+        );
+        [
+          ...(Array.isArray(data?.channelEmotes) ? data.channelEmotes : []),
+          ...(Array.isArray(data?.sharedEmotes) ? data.sharedEmotes : [])
+        ].slice(0, MAX_EMOTES).forEach(e => {
+          const extension = e?.imageType === "png" ? "png" : "webp";
+          registerPlatformEmote(
+            youtubeEmoteMap,
+            e?.code,
+            `https://cdn.betterttv.net/emote/${encodeURIComponent(String(e?.id || ""))}/3x.${extension}`
+          );
+        });
+        console.log("[BTTV] YouTube-Channel-Emotes geladen");
+      } catch (err) {
+        console.warn("[BTTV] Fehler YouTube-Channel:", err);
+      }
+    })());
+  }
+
+  await Promise.allSettled(tasks);
 }
 
 // ===== BTTV laden =====
@@ -366,7 +469,9 @@ async function loadBTTVGlobal() {
     const data = await fetchJson("https://api.betterttv.net/3/cached/emotes/global", "Globale BetterTTV-Emotes");
     let count = 0;
     (Array.isArray(data) ? data : []).slice(0, MAX_EMOTES).forEach(e => {
-      if (registerEmote(e?.code, `https://cdn.betterttv.net/emote/${encodeURIComponent(String(e?.id || ""))}/3x`)) count++;
+      const imageUrl = `https://cdn.betterttv.net/emote/${encodeURIComponent(String(e?.id || ""))}/3x`;
+      if (registerEmote(e?.code, imageUrl)) count++;
+      registerPlatformEmote(youtubeEmoteMap, e?.code, imageUrl, false);
     });
     console.log("[BTTV] Globale Emotes geladen:", count);
   } catch (err) {
@@ -454,7 +559,7 @@ function createEmoteImage(src, alt) {
   return createImage("emote", src, alt);
 }
 
-function appendTextWithThirdPartyEmotes(parent, text) {
+function appendTextWithThirdPartyEmotes(parent, text, providerMap = emoteMap) {
   const content = String(text || "");
   if (!content) return;
 
@@ -462,8 +567,8 @@ function appendTextWithThirdPartyEmotes(parent, text) {
   parts.forEach((part, index) => {
     if (index > 0) appendText(parent, " ");
 
-    if (hasOwn(emoteMap, part)) {
-      const image = createEmoteImage(emoteMap[part], part);
+    if (hasOwn(providerMap, part)) {
+      const image = createEmoteImage(providerMap[part], part);
       if (image) {
         parent.appendChild(image);
         return;
@@ -516,7 +621,7 @@ function appendKickText(parent, text) {
   let match;
 
   while ((match = emotePattern.exec(content)) !== null) {
-    appendText(parent, content.slice(lastIndex, match.index));
+    appendTextWithThirdPartyEmotes(parent, content.slice(lastIndex, match.index), kickEmoteMap);
     const [, id, name] = match;
     const image = createEmoteImage(`https://files.kick.com/emotes/${id}/fullsize`, name);
     if (image) parent.appendChild(image);
@@ -524,7 +629,7 @@ function appendKickText(parent, text) {
     lastIndex = match.index + match[0].length;
   }
 
-  appendText(parent, content.slice(lastIndex));
+  appendTextWithThirdPartyEmotes(parent, content.slice(lastIndex), kickEmoteMap);
 }
 
 function bestYouTubeThumbnail(thumbnails) {
@@ -536,7 +641,7 @@ function bestYouTubeThumbnail(thumbnails) {
 
 function appendYouTubeText(parent, text, segments) {
   if (!Array.isArray(segments) || segments.length === 0 || segments.length > 100) {
-    appendTextWithThirdPartyEmotes(parent, text);
+    appendTextWithThirdPartyEmotes(parent, text, youtubeEmoteMap);
     return;
   }
 
@@ -547,7 +652,7 @@ function appendYouTubeText(parent, text, segments) {
       else appendText(parent, segment.text || "");
       return;
     }
-    appendTextWithThirdPartyEmotes(parent, segment?.text || "");
+    appendTextWithThirdPartyEmotes(parent, segment?.text || "", youtubeEmoteMap);
   });
 }
 
@@ -1146,6 +1251,7 @@ async function discoverYouTube() {
       visitorData: result?.visitorData || "",
       discoveredAt: Date.now()
     };
+    void loadYouTubeChannelEmotes(youtubeClient.channelId);
     youtubeReconnectAttempts = 0;
 
     if (result?.videoId) {
@@ -1277,6 +1383,7 @@ async function pollYouTube() {
   if (ENABLE_7TV) {
     if (SEVENTV_USER_ID) optionalTasks.push(load7TVUser());
     optionalTasks.push(load7TVGlobal());
+    optionalTasks.push(load7TVKickUser());
   }
   if (ENABLE_BTTV) {
     optionalTasks.push(loadBTTVGlobal());
