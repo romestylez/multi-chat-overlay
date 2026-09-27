@@ -729,22 +729,22 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .source-size-note {
-  margin: 0 0 18px;
-  padding: 12px 14px;
+  display: block;
+  margin: 8px 0 0;
+  padding: 7px 10px;
   border: 1px solid rgba(255, 123, 138, 0.62);
-  border-radius: 10px;
+  border-radius: 8px;
   color: #ff5c66;
   background: rgba(50, 11, 18, 0.82);
-  font-size: 0.95rem;
+  font-size: 0.84rem;
   font-weight: 700;
   line-height: 1.5;
 }
 
 .source-size-note strong {
   display: block;
-  margin-bottom: 2px;
   color: #ff303e;
-  font-size: 1.05rem;
+  font-size: 0.9rem;
   font-weight: 850;
 }
 
