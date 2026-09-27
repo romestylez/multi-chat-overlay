@@ -733,7 +733,7 @@ input[type="range"]::-webkit-slider-thumb {
   padding: 12px 14px;
   border: 1px solid rgba(255, 123, 138, 0.62);
   border-radius: 10px;
-  color: #ffd8dd;
+  color: #ff5c66;
   background: rgba(50, 11, 18, 0.82);
   font-size: 0.95rem;
   font-weight: 700;
@@ -743,7 +743,7 @@ input[type="range"]::-webkit-slider-thumb {
 .source-size-note strong {
   display: block;
   margin-bottom: 2px;
-  color: #ff8793;
+  color: #ff303e;
   font-size: 1.05rem;
   font-weight: 850;
 }
