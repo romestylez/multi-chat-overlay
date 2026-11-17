@@ -70,6 +70,25 @@ code {
   padding: 58px 0 48px;
 }
 
+.page-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+a.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.legal-address {
+  font-style: normal;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
 .hero {
   display: flex;
   align-items: flex-start;
